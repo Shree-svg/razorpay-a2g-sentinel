@@ -1,4 +1,5 @@
 import "./globals.css";
+
 import { AuditProvider } from "@/contexts/AuditContext";
 
 export const metadata = {

@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import ControlPanel from "@/components/ControlPanel";
 import AgentWorkspace from "@/components/AgentWorkspace";
