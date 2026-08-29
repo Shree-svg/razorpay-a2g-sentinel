@@ -69,6 +69,6 @@ No single component holds both **reasoning power** (LLM) and **execution power**
 
 ## 6. Failure Modes & Handling
 * **Expired token:** Gateway returns `401`, loop does not retry (retrying won't fix an expired token) — surfaces directly to UI as a terminal failure.
-* **Price mismatch:** Gateway returns `403` with reason `PRICE_CEILING_EXCEEDED`; loop may re-plan with a lower-priced SKU if one exists in the sanitized catalog.
+* **Price mismatch:** Gateway returns `403` with reason `PRICE_CEILING_EXCEEDED`. This is treated as a **terminal, non-retryable failure** (see `rules.md` §2.4) — the loop halts immediately with `HALTED_TERMINAL_SECURITY` rather than attempting to re-plan around it. A hard price ceiling that can be silently worked around by re-planning is not a hard ceiling; if the user wants a different SKU, that is a new goal, not a retry of the current one.
 * **Malformed LLM output:** Zod parse failure triggers the retry path in `agentLoop.ts`, feeding the validation error back as context for the next Plan step.
 * **Prompt injection detected:** Sanitization diff is non-empty; this event itself is logged to the Audit Trail as a security event, independent of transaction outcome.
