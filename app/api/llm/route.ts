@@ -1,0 +1,58 @@
+import { NextResponse } from "next/server";
+import { Groq } from "groq-sdk";
+import { StepSchema } from "@/lib/agentLoop";
+
+export async function POST(request: Request) {
+  const GROQ_API_KEY = process.env.GROQ_API_KEY;
+  if (!GROQ_API_KEY) {
+    return NextResponse.json({ reason: "Missing GROQ_API_KEY" }, { status: 401 });
+  }
+
+  let body: any;
+  try {
+    body = await request.json();
+  } catch (e) {
+    return NextResponse.json({ reason: "Invalid JSON body" }, { status: 400 });
+  }
+
+  const messages = body?.messages;
+  if (!Array.isArray(messages)) {
+    return NextResponse.json({ reason: "Request body must contain a 'messages' array" }, { status: 400 });
+  }
+
+  const client = new Groq({ apiKey: GROQ_API_KEY });
+
+  // Build a new messages array with a system prompt that enforces JSON output and includes the required keyword.
+  const systemPrompt = {
+    role: "system" as const,
+    content:
+      "You are the Buyer Agent's planning module. Respond with ONLY a valid JSON object, no markdown fences, no prose outside the JSON. The JSON must exactly match this shape: { \"thought\": string, \"action\": \"QUERY_CATALOG\" | \"PROPOSE_OFFER\" | \"GENERATE_INTENT\" | \"HALT\", \"payload\": object }. Do not include any text before or after the JSON object. Include the word json in your response.",
+  };
+  const fullMessages = [systemPrompt, ...messages];
+
+  try {
+    const completion = await client.chat.completions.create({
+      model: "openai/gpt-oss-120b",
+      messages: fullMessages,
+      response_format: { type: "json_object" } as any,
+    });
+
+    const rawContent = completion.choices?.[0]?.message?.content?.trim();
+    if (!rawContent) {
+      return NextResponse.json({ reason: "Empty response from LLM" }, { status: 502 });
+    }
+
+    const parsed = JSON.parse(rawContent);
+    const validated = StepSchema.parse(parsed);
+
+    return NextResponse.json(validated, { status: 200 });
+  } catch (err: any) {
+    // Detect Groq model deprecation (404 with model_not_found)
+    const isModelNotFound = err?.status === 404 && String(err?.message).includes("model_not_found");
+    const reason = isModelNotFound
+      ? "GROQ MODEL DEPRECATED — check console.groq.com/docs/deprecations and update app/api/llm/route.ts"
+      : err?.message ?? "Unexpected error";
+    const status = err?.status ?? 500;
+    return NextResponse.json({ reason }, { status });
+  }
+}

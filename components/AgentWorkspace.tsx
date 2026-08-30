@@ -1,4 +1,5 @@
 import React from "react";
+import BuyerAgentPanel from "./BuyerAgentPanel";
 
 export default function AgentWorkspace() {
   return (
@@ -31,13 +32,6 @@ export default function AgentWorkspace() {
       <div className="flex-1 grid grid-cols-2 gap-4 min-h-0">
         {/* Buyer Agent (blue tint) */}
         <div className="flex flex-col h-full bg-blue-950/5 border border-blue-900/20 rounded-lg p-3 overflow-hidden">
-          <div className="flex items-center justify-between pb-2 border-b border-blue-900/10 mb-2">
-            <span className="text-xs font-semibold text-blue-400 uppercase tracking-wide">
-              Buyer Agent
-            </span>
-            <span className="text-[10px] bg-blue-950/80 border border-blue-900/40 text-blue-300 font-mono px-1.5 py-0.5 rounded">
-              LLM REASONER
-            </span>
           </div>
           <div className="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
             <div className="bg-slate-900/70 border border-slate-850 p-2.5 rounded-lg text-slate-400">
@@ -47,10 +41,7 @@ export default function AgentWorkspace() {
             {/* Mock chat bubble */}
             <div className="bg-blue-900/10 border border-blue-900/20 p-2.5 rounded-lg text-slate-300">
               <p className="font-mono text-[10px] text-blue-400 mb-1">OBSERVE</p>
-              Waiting for user goal to run loop.
-            </div>
-          </div>
-        </div>
+        <BuyerAgentPanel />
 
         {/* Merchant Agent (purple tint) */}
         <div className="flex flex-col h-full bg-purple-950/5 border border-purple-900/20 rounded-lg p-3 overflow-hidden">
