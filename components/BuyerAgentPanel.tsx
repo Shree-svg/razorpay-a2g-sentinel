@@ -34,26 +34,44 @@ export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProp
     },
     fetchCatalog: async () => {
       const resp = await fetch("/api/merchant");
-      const body = await resp.json();
-      return { httpStatus: resp.status, body };
+        if (!resp.ok) {
+          const body = await resp.json().catch(() => ({}));
+          const reason = body?.reason ?? `HTTP ${resp.status}`;
+          addLog({ actor: 'buyer', action: 'fetch_catalog', payload: { error: reason }, status: 'error' });
+          throw new Error(reason);
+        }
+        const body = await resp.json();
+        return { httpStatus: resp.status, body };
     },
     mintIntent: async (sku: string, maxAmount: number, expiresInSeconds: number) => {
       const resp = await fetch("/api/buyer", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sku, maxAmount, expiresInSeconds }),
-      });
-      const body = await resp.json();
-      return { httpStatus: resp.status, body };
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sku, maxAmount, expiresInSeconds }),
+        });
+        if (!resp.ok) {
+          const body = await resp.json().catch(() => ({}));
+          const reason = body?.reason ?? `HTTP ${resp.status}`;
+          addLog({ actor: 'buyer', action: 'mint_intent', payload: { error: reason }, status: 'error' });
+          throw new Error(reason);
+        }
+        const body = await resp.json();
+        return { httpStatus: resp.status, body };
     },
     validateWithGateway: async (token: unknown, invoice: unknown) => {
       const resp = await fetch("/api/gateway", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, invoice }),
-      });
-      const body = await resp.json();
-      return { httpStatus: resp.status, body };
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, invoice }),
+        });
+        if (!resp.ok) {
+          const body = await resp.json().catch(() => ({}));
+          const reason = body?.reason ?? `HTTP ${resp.status}`;
+          addLog({ actor: 'buyer', action: 'validate_gateway', payload: { error: reason }, status: 'error' });
+          throw new Error(reason);
+        }
+        const body = await resp.json();
+        return { httpStatus: resp.status, body };
     },
   };
 
