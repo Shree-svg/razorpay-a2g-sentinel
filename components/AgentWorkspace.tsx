@@ -10,7 +10,7 @@ const { addLog } = useAudit();
   const [approvalStatus, setApprovalStatus] = useState<"approved" | null>(null);
   // The banner should only show when the buyer agent finished with SUCCESS
   const showApproval =
-    buyerOutcome?.status === "SUCCESS" && buyerOutcome?.awaitingHumanApproval === true;
+  buyerOutcome?.status === "SUCCESS" && buyerOutcome?.result?.awaitingHumanApproval === true;
   useEffect(() => {
     if (!buyerOutcome) {
       setApprovalStatus(null);
