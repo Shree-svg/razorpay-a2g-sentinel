@@ -173,7 +173,7 @@ export default function AttackSimulator() {
           </p>
 
           {/* Side-by-side panels */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
             {/* Raw (before) */}
             <div className="bg-red-950/10 border border-red-900/20 rounded p-2">
               <p className="text-[10px] font-mono text-red-400 mb-1 uppercase tracking-wide">

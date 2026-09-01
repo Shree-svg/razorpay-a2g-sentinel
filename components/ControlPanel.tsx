@@ -34,7 +34,7 @@ export default function ControlPanel() {
       </div>
 
       {/* Red Team Simulation Buttons */}
-      <div className="border border-amber-900/30 bg-amber-950/5 rounded-lg p-4 space-y-3 relative overflow-hidden">
+      <div className="border border-amber-900/30 bg-amber-950/5 rounded-lg p-4 space-y-3 relative overflow-auto">
         {/* Warning strip border effect */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 opacity-60" />
         <h3 className="text-xs font-semibold text-amber-500/90 uppercase tracking-wide">
