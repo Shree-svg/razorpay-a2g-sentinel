@@ -3,7 +3,11 @@ import React, { useState } from "react";
 import { runAgentLoop } from "@/lib/agentLoop";
 import { useAudit } from "@/contexts/AuditContext";
 
-export default function BuyerAgentPanel() {
+interface BuyerAgentPanelProps {
+  onOutcomeChange?: (outcome: any) => void;
+}
+
+export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProps) {
   const { addLog } = useAudit();
   const [goal, setGoal] = useState("");
   const [running, setRunning] = useState(false);
@@ -20,9 +24,13 @@ export default function BuyerAgentPanel() {
       const resp = await fetch("/api/llm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(messages),
+        body: JSON.stringify({ messages }),
       });
-      return await resp.json();
+      const body = await resp.json();
+      if (!resp.ok) {
+        throw new Error(`invokeLlm failed (${resp.status}): ${body?.reason ?? "unknown error"}`);
+      }
+      return body;
     },
     fetchCatalog: async () => {
       const resp = await fetch("/api/merchant");
@@ -85,12 +93,16 @@ export default function BuyerAgentPanel() {
     setStage(null);
     setAttempt(0);
     setOutcome(null);
+    onOutcomeChange?.(null);
     try {
       const result = await runAgentLoop(goal, tools, onStep);
       setOutcome(result);
+      onOutcomeChange?.(result);
     } catch (e: any) {
       log("buyer", "unexpected_error", e.message ?? e, "error");
-      setOutcome({ status: "HALTED_FAILED_VALIDATION", lastError: e.message ?? String(e) });
+      const errOutcome = { status: "HALTED_FAILED_VALIDATION", lastError: e.message ?? String(e) };
+      setOutcome(errOutcome);
+      onOutcomeChange?.(errOutcome);
     } finally {
       setRunning(false);
     }
@@ -125,7 +137,7 @@ export default function BuyerAgentPanel() {
       {outcome && (
         <div className="mt-2 text-xs">
           <strong>Status:</strong> {outcome.status}
-          <pre className="mt-1 overflow-x-auto bg-slate-900/30 p-2 rounded text-slate-300">
+          <pre className="mt-1 overflow-x-auto overflow-y-auto max-h-40 bg-slate-900/30 p-2 rounded text-slate-300">
             {JSON.stringify(outcome, null, 2)}
           </pre>
         </div>
@@ -133,4 +145,3 @@ export default function BuyerAgentPanel() {
     </div>
   );
 }
-
