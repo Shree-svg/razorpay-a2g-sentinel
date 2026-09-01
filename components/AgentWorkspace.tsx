@@ -32,16 +32,8 @@ export default function AgentWorkspace() {
       <div className="flex-1 grid grid-cols-2 gap-4 min-h-0">
         {/* Buyer Agent (blue tint) */}
         <div className="flex flex-col h-full bg-blue-950/5 border border-blue-900/20 rounded-lg p-3 overflow-hidden">
-          </div>
-          <div className="flex-1 overflow-y-auto space-y-3 pr-1 text-xs">
-            <div className="bg-slate-900/70 border border-slate-850 p-2.5 rounded-lg text-slate-400">
-              <span className="text-blue-400 font-semibold">Goal Input:</span>
-              <p className="mt-1 italic">"Enter your target goal to begin negotiation loop..."</p>
-            </div>
-            {/* Mock chat bubble */}
-            <div className="bg-blue-900/10 border border-blue-900/20 p-2.5 rounded-lg text-slate-300">
-              <p className="font-mono text-[10px] text-blue-400 mb-1">OBSERVE</p>
-        <BuyerAgentPanel />
+          <BuyerAgentPanel />
+        </div>
 
         {/* Merchant Agent (purple tint) */}
         <div className="flex flex-col h-full bg-purple-950/5 border border-purple-900/20 rounded-lg p-3 overflow-hidden">
