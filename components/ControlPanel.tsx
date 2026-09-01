@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import AttackSimulator from "./AttackSimulator";
 
 export default function ControlPanel() {
   return (
@@ -43,11 +44,11 @@ export default function ControlPanel() {
           Simulate runtime attacks to verify sanitization and validation limits.
         </p>
         <div className="flex flex-col gap-2">
-          {[
-            "Inject Prompt Attack",
-            "Modify Price Payload",
-            "Expire Token",
-          ].map((attack) => (
+          {/* Live attack simulator — replaces the static "Inject Prompt Attack" placeholder */}
+          <AttackSimulator />
+
+          {/* Remaining attack buttons — still placeholders for future phases */}
+          {["Modify Price Payload", "Expire Token"].map((attack) => (
             <button
               key={attack}
               disabled
