@@ -5,6 +5,7 @@ export type Actor = 'buyer' | 'merchant' | 'gateway';
 export type Status = 'success' | 'blocked' | 'error' | 'retry';
 
 export interface AuditLogEntry {
+  id: string;
   timestamp: number;
   actor: Actor;
   action: string;
@@ -14,7 +15,7 @@ export interface AuditLogEntry {
 
 interface AuditContextValue {
   logs: AuditLogEntry[];
-  addLog: (entry: Omit<AuditLogEntry, 'timestamp'>) => void;
+  addLog: (entry: Omit<AuditLogEntry, 'timestamp' | 'id'>) => void;
 }
 
 const AuditContext = createContext<AuditContextValue | undefined>(undefined);
@@ -22,8 +23,9 @@ const AuditContext = createContext<AuditContextValue | undefined>(undefined);
 export const AuditProvider = ({ children }: { children: ReactNode }) => {
   const [logs, setLogs] = useState<AuditLogEntry[]>([]);
 
-  const addLog = (entry: Omit<AuditLogEntry, 'timestamp'>) => {
-    setLogs((prev) => [...prev, { ...entry, timestamp: Date.now() }]);
+  const addLog = (entry: Omit<AuditLogEntry, 'timestamp' | 'id'>) => {
+    const uniqueId = `${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+    setLogs((prev) => [...prev, { ...entry, timestamp: Date.now(), id: uniqueId }]);
   };
 
   return (

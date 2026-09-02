@@ -14,6 +14,7 @@ export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProp
   const [stage, setStage] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [outcome, setOutcome] = useState<any>(null);
+  const [validationError, setValidationError] = useState("");
 
   const log = (actor: "buyer" | "merchant" | "gateway", action: string, payload: unknown, status: "success" | "blocked" | "error" | "retry") => {
     addLog({ actor, action, payload, status });
@@ -34,44 +35,39 @@ export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProp
     },
     fetchCatalog: async () => {
       const resp = await fetch("/api/merchant");
-        if (!resp.ok) {
-          const body = await resp.json().catch(() => ({}));
-          const reason = body?.reason ?? `HTTP ${resp.status}`;
-          addLog({ actor: 'buyer', action: 'fetch_catalog', payload: { error: reason }, status: 'error' });
-          throw new Error(reason);
-        }
-        const body = await resp.json();
-        return { httpStatus: resp.status, body };
+      const body = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        const reason = body?.reason ?? `HTTP ${resp.status}`;
+        addLog({ actor: 'buyer', action: 'fetch_catalog', payload: { error: reason }, status: 'error' });
+        throw new Error(reason);
+      }
+      return body;
     },
     mintIntent: async (sku: string, maxAmount: number, expiresInSeconds: number) => {
       const resp = await fetch("/api/buyer", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ sku, maxAmount, expiresInSeconds }),
-        });
-        if (!resp.ok) {
-          const body = await resp.json().catch(() => ({}));
-          const reason = body?.reason ?? `HTTP ${resp.status}`;
-          addLog({ actor: 'buyer', action: 'mint_intent', payload: { error: reason }, status: 'error' });
-          throw new Error(reason);
-        }
-        const body = await resp.json();
-        return { httpStatus: resp.status, body };
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sku, maxAmount, expiresInSeconds }),
+      });
+      const body = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        const reason = body?.reason ?? `HTTP ${resp.status}`;
+        addLog({ actor: 'buyer', action: 'mint_intent', payload: { error: reason }, status: 'error' });
+      }
+      return { httpStatus: resp.status, body };
     },
     validateWithGateway: async (token: unknown, invoice: unknown) => {
       const resp = await fetch("/api/gateway", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token, invoice }),
-        });
-        if (!resp.ok) {
-          const body = await resp.json().catch(() => ({}));
-          const reason = body?.reason ?? `HTTP ${resp.status}`;
-          addLog({ actor: 'buyer', action: 'validate_gateway', payload: { error: reason }, status: 'error' });
-          throw new Error(reason);
-        }
-        const body = await resp.json();
-        return { httpStatus: resp.status, body };
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, invoice }),
+      });
+      const body = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        const reason = body?.reason ?? `HTTP ${resp.status}`;
+        addLog({ actor: 'buyer', action: 'validate_gateway', payload: { error: reason }, status: 'error' });
+      }
+      return { httpStatus: resp.status, body };
     },
   };
 
@@ -107,6 +103,13 @@ export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProp
 
   const handleRun = async () => {
     if (!goal.trim()) return;
+    
+    if (/^https?:\/\//i.test(goal.trim()) || goal.trim().length < 5) {
+      setValidationError("Please describe what you'd like to buy (e.g. 'buy noise cancelling headphones under 30000 rupees')");
+      return;
+    }
+    setValidationError("");
+
     setRunning(true);
     setStage(null);
     setAttempt(0);
@@ -146,6 +149,9 @@ export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProp
           {running ? "Running…" : "Run"}
         </button>
       </div>
+      {validationError && (
+        <div className="text-xs text-rose-400 mt-1">{validationError}</div>
+      )}
       {running && (
         <div className="text-xs text-slate-400">
           Stage: <span className="font-medium">{stage?.toUpperCase() ?? "—"}</span>

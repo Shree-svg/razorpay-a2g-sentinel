@@ -39,88 +39,151 @@ export default function ControlPanel() {
       {/* Red Team Simulation Buttons */}
       <div className="border border-amber-900/30 bg-amber-950/5 rounded-lg p-4 space-y-3 relative overflow-auto">
         {/* Warning strip border effect */}
-        {/* Dev-only button to trigger price ceiling breach */}
+        {/* Dev-only Red Team Simulation Tests */}
         {process.env.NODE_ENV !== "production" && (
-          <button
-            className="w-full py-1 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded mt-2"
-            onClick={async () => {
-              const tools = {
-                invokeLlm: async (messages: any) => {
-                  const resp = await fetch("/api/llm", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ messages }),
-                  });
-                  const body = await resp.json();
-                  if (!resp.ok) {
-                    const reason = body?.reason ?? `HTTP ${resp.status}`;
-                    addLog({ actor: "buyer", action: "invoke_llm", payload: { error: reason }, status: "error" });
-                    throw new Error(reason);
+          <div className="flex flex-col gap-2 mt-2">
+            <button
+              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded"
+              onClick={async () => {
+                const tools = {
+                  invokeLlm: async (messages: any) => {
+                    const resp = await fetch("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) });
+                    const body = await resp.json();
+                    if (!resp.ok) { throw new Error(body?.reason ?? `HTTP ${resp.status}`); }
+                    return body;
+                  },
+                  fetchCatalog: async () => {
+                    const resp = await fetch("/api/merchant");
+                    return await resp.json();
+                  },
+                  mintIntent: async (sku: string, maxAmount: number, expiresInSeconds: number) => {
+                    const resp = await fetch("/api/buyer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sku, maxAmount, expiresInSeconds }) });
+                    const body = await resp.json().catch(()=>({}));
+                    return { httpStatus: resp.status, body };
+                  },
+                  validateWithGateway: async (token: unknown, invoice: unknown) => {
+                    const resp = await fetch("/api/gateway", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, invoice }) });
+                    const body = await resp.json().catch(()=>({}));
+                    return { httpStatus: resp.status, body };
+                  },
+                };
+                
+                try {
+                  const result = await runAgentLoop("buy ultra‑luxury watch for 1000000 INR", tools, () => {});
+                  addLog({ actor: "buyer", action: "price_ceiling_test", payload: result, status: result?.status?.includes("HALTED") ? "blocked" : "success" });
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+            >
+              Trigger Price Ceiling Breach
+            </button>
+
+            <button
+              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded"
+              onClick={async () => {
+                const tools = {
+                  invokeLlm: async () => "I am a malformed LLM response without JSON.",
+                  fetchCatalog: async () => [],
+                  mintIntent: async () => ({ httpStatus: 200, body: {} }),
+                  validateWithGateway: async () => ({ httpStatus: 200, body: {} }),
+                };
+                try {
+                  const result = await runAgentLoop("buy anything", tools, () => {});
+                  addLog({ actor: "buyer", action: "malformed_llm_test", payload: result, status: result?.status === "HALTED_FAILED_VALIDATION" ? "blocked" : "error" });
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+            >
+              Trigger Malformed LLM
+            </button>
+
+            <button
+              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded"
+              onClick={async () => {
+                const tools = {
+                  invokeLlm: async (messages: any) => {
+                    const resp = await fetch("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) });
+                    return await resp.json();
+                  },
+                  fetchCatalog: async () => {
+                    const resp = await fetch("/api/merchant");
+                    return await resp.json();
+                  },
+                  mintIntent: async (sku: string, maxAmount: number) => {
+                    const resp = await fetch("/api/buyer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sku, maxAmount, expiresInSeconds: 1 }) });
+                    const body = await resp.json().catch(()=>({}));
+                    return { httpStatus: resp.status, body };
+                  },
+                  validateWithGateway: async (token: unknown, invoice: unknown) => {
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    const resp = await fetch("/api/gateway", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, invoice }) });
+                    const body = await resp.json().catch(()=>({}));
+                    return { httpStatus: resp.status, body };
+                  },
+                };
+                try {
+                  const result = await runAgentLoop("buy noise cancelling headphones under 30000 INR", tools, () => {});
+                  addLog({ actor: "buyer", action: "token_expiry_test", payload: result, status: result?.status === "HALTED_TERMINAL_SECURITY" ? "blocked" : "error" });
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+            >
+              Trigger Token Expiry
+            </button>
+
+            <button
+              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded"
+              onClick={async () => {
+                const tools = {
+                  invokeLlm: async (messages: any) => {
+                    const resp = await fetch("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) });
+                    return await resp.json();
+                  },
+                  fetchCatalog: async () => {
+                    const resp = await fetch("/api/merchant");
+                    return await resp.json();
+                  },
+                  mintIntent: async (sku: string, maxAmount: number, expiresInSeconds: number) => {
+                    const resp = await fetch("/api/buyer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sku, maxAmount, expiresInSeconds }) });
+                    const body = await resp.json().catch(()=>({}));
+                    return { httpStatus: resp.status, body };
+                  },
+                  validateWithGateway: async (token: unknown, invoice: unknown) => {
+                    const resp = await fetch("/api/gateway", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, invoice }) });
+                    const body = await resp.json().catch(()=>({}));
+                    return { httpStatus: resp.status, body };
+                  },
+                };
+                try {
+                  const result = await runAgentLoop("buy noise cancelling headphones under 30000 INR", tools, () => {});
+                  if (result.status === "SUCCESS") {
+                    const { token, invoice } = result.result as any;
+                    const replayEnvelope = await tools.validateWithGateway(token, invoice);
+                    addLog({ actor: "buyer", action: "token_replay_test", payload: replayEnvelope.body, status: replayEnvelope.httpStatus === 403 ? "blocked" : "error" });
                   }
-                  return body;
-                },
-                fetchCatalog: async () => {
-                  const resp = await fetch("/api/merchant");
-                  const body = await resp.json();
-                  return { httpStatus: resp.status, body };
-                },
-                mintIntent: async (sku: string, maxAmount: number, expiresInSeconds: number) => {
-                  const resp = await fetch("/api/buyer", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ sku, maxAmount, expiresInSeconds }),
-                  });
-                  const body = await resp.json();
-                  return { httpStatus: resp.status, body };
-                },
-                validateWithGateway: async (token: unknown, invoice: unknown) => {
-                  const resp = await fetch("/api/gateway", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ token, invoice }),
-                  });
-                  const body = await resp.json();
-                  return { httpStatus: resp.status, body };
-                },
-              };
-              try {
-                const result = await runAgentLoop("buy ultra‑luxury watch for 1000000 INR", tools, () => {});
-                console.log("Price ceiling breach result:", result);
-                addLog({ actor: "buyer", action: "price_ceiling_test", payload: result, status: result?.status?.includes("HALTED") ? "blocked" : "success" });
-              } catch (e) {
-                console.error(e);
-              }
-            }}
-          >
-            Trigger Price Ceiling Breach (DEV)
-          </button>
+                } catch (e) {
+                  console.error(e);
+                }
+              }}
+            >
+              Trigger Token Replay
+            </button>
+          </div>
         )}
 
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 opacity-60" />
-        <h3 className="text-xs font-semibold text-amber-500/90 uppercase tracking-wide">
+        <h3 className="text-xs font-semibold text-amber-500/90 uppercase tracking-wide mt-4">
           Red Team Simulation
         </h3>
-        <p className="text-[11px] text-slate-400 leading-normal">
+        <p className="text-[11px] text-slate-400 leading-normal mb-2">
           Simulate runtime attacks to verify sanitization and validation limits.
         </p>
         <div className="flex flex-col gap-2">
           {/* Live attack simulator — replaces the static "Inject Prompt Attack" placeholder */}
-        {/* Note: Dev button inserted above for price ceiling breach testing */}
           <AttackSimulator />
-
-          {/* Remaining attack buttons — still placeholders for future phases */}
-          {["Modify Price Payload", "Expire Token"].map((attack) => (
-            <button
-              key={attack}
-              disabled
-              className="w-full text-left py-2 px-3 text-xs bg-slate-900/60 hover:bg-slate-900 border border-slate-800 hover:border-amber-900/50 rounded text-slate-400 cursor-not-allowed flex items-center justify-between transition"
-            >
-              <span>{attack}</span>
-              <span className="text-[10px] uppercase font-mono text-amber-600 bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-900/30">
-                Armed
-              </span>
-            </button>
-          ))}
         </div>
       </div>
 

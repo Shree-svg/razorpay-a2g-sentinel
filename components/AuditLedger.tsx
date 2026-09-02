@@ -73,7 +73,7 @@ export default function AuditLedger() {
           className="absolute inset-0 p-4 font-mono text-[13px] overflow-y-auto bg-[#04060c] text-slate-300 space-y-4"
         >
           {logs.slice().reverse().map((entry) => (
-            <div key={entry.timestamp} className="space-y-1">
+            <div key={entry.id} className="space-y-1">
               <div className="flex items-center space-x-2 text-slate-500 text-xs">
                 <span>{`[${new Date(entry.timestamp).toLocaleTimeString()}]`}</span>
                 <span className={statusClass(entry.status)}>
