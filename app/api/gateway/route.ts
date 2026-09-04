@@ -75,6 +75,40 @@ export async function POST(request: Request) {
       return jsonError(statusForFailure(result.code), result.reason);
     }
 
+    const keyId = process.env.RAZORPAY_KEY_ID;
+    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!keyId || !keySecret) {
+      // Missing test-mode keys
+      return jsonError(500, "Missing Razorpay API keys in .env.local");
+    }
+
+    const auth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+    const rzpResponse = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Basic ${auth}`,
+      },
+      body: JSON.stringify({
+        amount: Math.round(invoice.amount * 100), // paise
+        currency: "INR",
+        receipt: invoice.sku,
+        notes: {
+          token_nonce: token.nonce,
+        },
+      }),
+    });
+
+    const rzpData = await rzpResponse.json();
+
+    if (!rzpResponse.ok) {
+      return jsonError(502, `Razorpay API error: ${rzpData.error?.description || "Unknown error"}`);
+    }
+
+    result.orderId = rzpData.id;
+    result.reason = `Order created successfully: ${rzpData.id}. Human approval is still required before funds move.`;
+
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
     const reason =

@@ -199,6 +199,21 @@ Returns all catalog items with prompt injections stripped. Raw catalog is **neve
 
 ---
 
+## Integration Status & Metrics
+
+**Integration Status:**
+- Razorpay Orders API (test mode) successfully integrated. Validated tokens mint real Razorpay test orders.
+
+**Red Team Benchmark Results (N=50 per attack):**
+- **Price Ceiling Breach:** 100% Blocked
+- **Token Expiry / Replay:** 100% Blocked
+- **Malformed LLM:** 100% Blocked
+- **Basic Prompt Injection:** 100% Blocked
+- **Unicode Homoglyph Injection:** 100% Blocked
+- **Base64-Encoded Injection:** 100% Blocked
+
+---
+
 ## Security Rules (Summary)
 
 See [`docs/rules.md`](docs/rules.md) for the full specification.

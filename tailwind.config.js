@@ -7,12 +7,18 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
       colors: {
-        bitBg: "#090D16",
-        bitPrimary: "#3B82F6",
-        bitSuccess: "#10B981",
-        bitError: "#EF4444",
-        bitWarning: "#F59E0B",
+        'rzp-navy': '#0C2451',
+        'rzp-blue': '#3395FF',
+        'rzp-blue-dark': '#305EFF',
+        'rzp-text': '#0F0F0F',
+        'rzp-bg': '#F7F9FC',
+        'rzp-success': '#12B76A',
+        'rzp-error': '#E03137',
+        'rzp-warning': '#F2994A',
       },
     },
   },

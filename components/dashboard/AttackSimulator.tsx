@@ -99,7 +99,7 @@ export default function AttackSimulator() {
           return isStripped ? (
             <span
               key={i}
-              className="line-through text-red-400 bg-red-950/40 px-0.5 rounded"
+              className="line-through text-rzp-error bg-rzp-error/10 px-0.5 rounded"
             >
               {part}
             </span>
@@ -119,21 +119,21 @@ export default function AttackSimulator() {
       <button
         onClick={handleAttack}
         disabled={running}
-        className="w-full text-left py-2 px-3 text-xs bg-slate-900/60 hover:bg-slate-900 border border-slate-800 hover:border-amber-900/50 rounded text-slate-300 flex items-center justify-between transition disabled:opacity-50"
+        className="w-full text-left py-2 px-3 text-xs bg-white hover:bg-gray-50 border border-gray-200 hover:border-rzp-error rounded-lg text-gray-700 flex items-center justify-between transition disabled:opacity-50 shadow-sm"
       >
         <span>{running ? "Running attack…" : "Inject Prompt Attack"}</span>
         {!result && !running && (
-          <span className="text-[10px] uppercase font-mono text-amber-600 bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-900/30">
+          <span className="text-[10px] uppercase font-mono text-rzp-warning bg-rzp-warning/10 px-1.5 py-0.5 rounded border border-rzp-warning/20">
             Armed
           </span>
         )}
         {result && neutralized && (
-          <span className="text-[10px] uppercase font-mono text-emerald-500 bg-emerald-950/50 px-1.5 py-0.5 rounded border border-emerald-900/30">
+          <span className="text-[10px] uppercase font-mono text-rzp-success bg-rzp-success/10 px-1.5 py-0.5 rounded border border-rzp-success/20">
             Neutralized
           </span>
         )}
         {result && !neutralized && (
-          <span className="text-[10px] uppercase font-mono text-amber-500 bg-amber-950/50 px-1.5 py-0.5 rounded border border-amber-900/30 animate-pulse">
+          <span className="text-[10px] uppercase font-mono text-rzp-warning bg-rzp-warning/10 px-1.5 py-0.5 rounded border border-rzp-warning/20 animate-pulse">
             ⚠ Regression
           </span>
         )}
@@ -141,7 +141,7 @@ export default function AttackSimulator() {
 
       {/* Error state */}
       {error && (
-        <div className="bg-red-950/20 border border-red-900/30 p-2.5 rounded text-xs text-red-400">
+        <div className="bg-rzp-error/10 border border-rzp-error/20 p-2.5 rounded-lg text-xs text-rzp-error">
           {error}
         </div>
       )}
@@ -151,47 +151,47 @@ export default function AttackSimulator() {
         <div className="space-y-2">
           {/* Status pill */}
           {neutralized ? (
-            <div className="flex items-center space-x-2 bg-emerald-950/20 border border-emerald-900/30 p-2 rounded">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-              <span className="text-[11px] font-mono text-emerald-400 uppercase tracking-wide">
+            <div className="flex items-center space-x-2 bg-rzp-success/10 border border-rzp-success/20 p-2 rounded-lg shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-rzp-success animate-pulse shrink-0" />
+              <span className="text-[11px] font-mono text-rzp-success uppercase tracking-wide font-bold">
                 Attack Neutralized — {result.stripped.length} injection
                 {result.stripped.length !== 1 ? "s" : ""} stripped
               </span>
             </div>
           ) : (
-            <div className="flex items-center space-x-2 bg-amber-950/20 border border-amber-900/30 p-2 rounded">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
-              <span className="text-[11px] font-mono text-amber-400 uppercase tracking-wide">
+            <div className="flex items-center space-x-2 bg-rzp-warning/10 border border-rzp-warning/20 p-2 rounded-lg shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-rzp-warning animate-pulse shrink-0" />
+              <span className="text-[11px] font-mono text-rzp-warning uppercase tracking-wide font-bold">
                 No Injection Detected — Possible Sanitization Regression
               </span>
             </div>
           )}
 
           {/* Target SKU label */}
-          <p className="text-[10px] font-mono text-slate-500">
+          <p className="text-[10px] font-mono text-gray-500">
             Target: {result.skuName} (SKU_003)
           </p>
 
           {/* Side-by-side panels */}
           <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
             {/* Raw (before) */}
-            <div className="bg-red-950/10 border border-red-900/20 rounded p-2">
-              <p className="text-[10px] font-mono text-red-400 mb-1 uppercase tracking-wide">
+            <div className="bg-rzp-error/10 border border-rzp-error/20 rounded-lg p-2 shadow-sm">
+              <p className="text-[10px] font-mono text-rzp-error mb-1 uppercase tracking-wide font-bold">
                 Raw (Unsanitized)
               </p>
-              <p className="text-[11px] text-slate-300 leading-relaxed break-words">
+              <p className="text-[11px] text-gray-800 leading-relaxed break-words">
                 {renderHighlightedRaw(result.rawDescription, result.stripped)}
               </p>
             </div>
 
             {/* Sanitized (after) */}
-            <div className="bg-emerald-950/10 border border-emerald-900/20 rounded p-2">
-              <p className="text-[10px] font-mono text-emerald-400 mb-1 uppercase tracking-wide">
+            <div className="bg-rzp-success/10 border border-rzp-success/20 rounded-lg p-2 shadow-sm">
+              <p className="text-[10px] font-mono text-rzp-success mb-1 uppercase tracking-wide font-bold">
                 Sanitized (Clean)
               </p>
-              <p className="text-[11px] text-emerald-300/80 leading-relaxed break-words">
+              <p className="text-[11px] text-gray-800 leading-relaxed break-words">
                 {result.sanitizedDescription || (
-                  <span className="text-slate-500 italic">
+                  <span className="text-gray-400 italic">
                     (entire description was an attack payload)
                   </span>
                 )}

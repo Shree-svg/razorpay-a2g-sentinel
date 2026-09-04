@@ -105,6 +105,7 @@ const ReasonBodySchema = z.object({
 const GatewaySuccessSchema = z.object({
   status: z.literal("SUCCESS"),
   reason: z.string(),
+  orderId: z.string().optional(),
 });
 
 const CatalogSchema = z.array(z.record(z.unknown()));

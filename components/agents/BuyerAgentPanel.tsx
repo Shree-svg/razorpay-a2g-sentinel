@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { runAgentLoop } from "@/lib/agentLoop";
 import { useAudit } from "@/contexts/AuditContext";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface BuyerAgentPanelProps {
   onOutcomeChange?: (outcome: any) => void;
@@ -9,6 +10,7 @@ interface BuyerAgentPanelProps {
 
 export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProps) {
   const { addLog } = useAudit();
+  const { settings } = useSettings();
   const [goal, setGoal] = useState("");
   const [running, setRunning] = useState(false);
   const [stage, setStage] = useState<string | null>(null);
@@ -35,13 +37,23 @@ export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProp
     addLog({ actor, action, payload, status });
   };
 
+  let currentRunTokens = 0;
+
   const tools = {
     invokeLlm: async (messages: any) => {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (settings.apiKey) headers["X-Groq-Api-Key"] = settings.apiKey;
+      if (settings.model) headers["X-Llm-Model"] = settings.model;
+
       const resp = await fetch("/api/llm", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ messages }),
       });
+      const tokensHeader = resp.headers.get("X-Token-Usage-Total");
+      if (tokensHeader) {
+        currentRunTokens += parseInt(tokensHeader, 10) || 0;
+      }
       const body = await resp.json();
       if (!resp.ok) {
         throw new Error(`invokeLlm failed (${resp.status}): ${body?.reason ?? "unknown error"}`);
@@ -129,13 +141,13 @@ export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProp
     setStage(null);
     setAttempt(0);
     setOutcome(null);
+    currentRunTokens = 0;
     onOutcomeChange?.(null);
     try {
       const start = Date.now();
       const result = await runAgentLoop(goal, tools, onStep);
       const latency = Date.now() - start;
-      const tokensUsed = 3000 * (attempt > 0 ? attempt : 1); 
-      const cost = tokensUsed * (0.000005); // rough estimate
+      const cost = currentRunTokens * 0.0000005; // $0.50 per 1M tokens
       window.dispatchEvent(new CustomEvent("bit:telemetry", { detail: { latency, cost } }));
 
       setOutcome(result);
@@ -151,8 +163,8 @@ export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProp
   };
 
   return (
-    <div className="flex flex-col h-full bg-blue-950/5 border border-blue-900/20 rounded-lg p-4 space-y-3">
-      <h2 className="text-sm font-semibold uppercase text-blue-300">Buyer Agent</h2>
+    <div className="flex flex-col h-full space-y-3">
+      <h2 className="text-sm font-semibold uppercase text-rzp-navy">Buyer Agent</h2>
       <div className="flex space-x-2">
         <input
           type="text"
@@ -160,29 +172,29 @@ export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProp
           value={goal}
           disabled={running}
           onChange={(e) => setGoal(e.target.value)}
-          className="flex-1 rounded border border-slate-700 bg-slate-900/50 px-2 py-1 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-bitPrimary"
+          className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-rzp-blue focus:ring-1 focus:ring-rzp-blue shadow-sm"
         />
         <button
           onClick={handleRun}
           disabled={running || !goal.trim()}
-          className="rounded bg-bitPrimary px-3 py-1 text-xs font-medium text-slate-900 hover:bg-bitPrimary/80 disabled:opacity-50"
+          className="rounded-lg bg-rzp-blue px-4 py-1.5 text-xs font-medium text-white hover:bg-rzp-blue-dark disabled:opacity-50 transition-colors shadow-sm"
         >
           {running ? "Running…" : "Run"}
         </button>
       </div>
       {validationError && (
-        <div className="text-xs text-rose-400 mt-1">{validationError}</div>
+        <div className="text-xs text-rzp-error mt-1">{validationError}</div>
       )}
       {running && (
-        <div className="text-xs text-slate-400">
-          Stage: <span className="font-medium">{stage?.toUpperCase() ?? "—"}</span>
-          {attempt > 0 && <span className="ml-2 text-amber-500">Retry #{attempt}</span>}
+        <div className="text-xs text-gray-500">
+          Stage: <span className="font-medium text-gray-800">{stage?.toUpperCase() ?? "—"}</span>
+          {attempt > 0 && <span className="ml-2 text-amber-600">Retry #{attempt}</span>}
         </div>
       )}
       {outcome && (
-        <div className="mt-2 text-xs">
+        <div className="mt-2 text-xs text-gray-700">
           <strong>Status:</strong> {outcome.status}
-          <pre className="mt-1 overflow-x-auto overflow-y-auto max-h-40 bg-slate-900/30 p-2 rounded text-slate-300">
+          <pre className="mt-2 overflow-x-auto overflow-y-auto max-h-40 bg-gray-50 border border-gray-200 p-2 rounded-lg text-gray-700 font-mono text-[10px]">
             {JSON.stringify(outcome, null, 2)}
           </pre>
         </div>
