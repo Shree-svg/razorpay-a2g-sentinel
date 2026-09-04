@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import BuyerAgentPanel from "./BuyerAgentPanel";
-import MerchantAgentPanel from "./MerchantAgentPanel";
+import BuyerAgentPanel from "../agents/BuyerAgentPanel";
+import MerchantAgentPanel from "../agents/MerchantAgentPanel";
 import { useAudit } from "@/contexts/AuditContext";
 export default function AgentWorkspace() {
   // Lifted outcome state so the approval banner can react to BuyerAgentPanel results

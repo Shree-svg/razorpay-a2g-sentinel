@@ -1,9 +1,9 @@
 "use client";
 import React, { useState } from "react";
-import ControlPanel from "@/components/ControlPanel";
-import AgentWorkspace from "@/components/AgentWorkspace";
-import AuditLedger from "@/components/AuditLedger";
-import SettingsModal from "@/components/SettingsModal";
+import ControlPanel from "@/components/dashboard/ControlPanel";
+import AgentWorkspace from "@/components/dashboard/AgentWorkspace";
+import AuditLedger from "@/components/dashboard/AuditLedger";
+import SettingsModal from "@/components/modals/SettingsModal";
 
 import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from "react-resizable-panels";
 
