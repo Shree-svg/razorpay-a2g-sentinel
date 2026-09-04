@@ -95,3 +95,8 @@ $ npm run build
  ✓ Generating static pages (5/5)
 ```
 - **Status**: PASS
+
+## TASK 6 — Demo Script update
+- **What was attempted**: Rewrote `docs/presentation/DEMO_SCRIPT.md` to compress the presentation to a 2-minute flow that prioritizes showing system rejections (Prompt Injection, Token Replay) before showcasing the happy path (Approval).
+- **Verification Command / Output**: Read new DEMO_SCRIPT.md
+- **Status**: PASS
