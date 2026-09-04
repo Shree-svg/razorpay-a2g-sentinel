@@ -245,8 +245,8 @@ async function actAndVerify(
   switch (step.action) {
     case "QUERY_CATALOG": {
       onStep?.({ kind: "act", action: step.action, detail: "fetchCatalog" });
-      const catalog = await tools.fetchCatalog();
-      const verified = CatalogSchema.safeParse(catalog);
+      const rawCatalog = await tools.fetchCatalog();
+      const verified = CatalogSchema.safeParse(rawCatalog);
       if (!verified.success) {
         const error = `Catalog failed Verify schema: ${formatZodError(verified.error)}`;
         onStep?.({ kind: "verify", ok: false, detail: error });
@@ -255,11 +255,16 @@ async function actAndVerify(
           mintedToken,
         };
       }
-      onStep?.({ kind: "verify", ok: true, detail: { itemCount: verified.data.length } });
+      // Re-use the same keyword filter to keep this message lean too.
+      // The goal string is not directly available here, so we pass the full
+      // verified array — filterCatalogForGoal is called by the caller with goal.
+      // For QUERY_CATALOG we cap at 30 items to avoid 413.
+      const filteredQC = verified.data.slice(0, 30);
+      onStep?.({ kind: "verify", ok: true, detail: { itemCount: verified.data.length, sending: filteredQC.length } });
       return {
         decision: {
           type: "continue",
-          observation: `VERIFY QUERY_CATALOG — sanitized catalog JSON:\n${JSON.stringify(verified.data)}`,
+          observation: `VERIFY QUERY_CATALOG — sanitized catalog JSON (${filteredQC.length} of ${verified.data.length} SKUs):\n${JSON.stringify(filteredQC)}`,
         },
         mintedToken,
       };
