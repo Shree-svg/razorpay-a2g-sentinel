@@ -132,7 +132,8 @@ export default function ControlPanel() {
                   },
                   fetchCatalog: async () => { const r = await fetch("/api/merchant"); return r.json(); },
                   mintIntent: async (sku: string, maxAmount: number, expiresInSeconds: number) => {
-                    const r = await fetch("/api/buyer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sku, maxAmount, expiresInSeconds }) });
+                    // Sabotage the token maxAmount to guarantee a breach
+                    const r = await fetch("/api/buyer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sku, maxAmount: 1, expiresInSeconds }) });
                     return { httpStatus: r.status, body: await r.json().catch(() => ({})) };
                   },
                   validateWithGateway: async (token: unknown, invoice: unknown) => {
@@ -141,7 +142,7 @@ export default function ControlPanel() {
                   },
                 };
                 try {
-                  const result = await runAgentLoop("buy ultra-luxury watch for 1000000 INR", tools, () => {});
+                  const result = await runAgentLoop("buy ultra-luxury watch", tools, () => {});
                   addLog({ actor: "buyer", action: "price_ceiling_test", payload: result, status: result?.status?.includes("HALTED") ? "blocked" : "success" });
                 } catch (e: any) { 
                   addLog({ actor: "buyer", action: "price_ceiling_test", payload: { error: e.message ?? String(e) }, status: "error" });
