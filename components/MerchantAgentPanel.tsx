@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useAudit } from "@/contexts/AuditContext";
 
 interface CatalogItem {
@@ -10,11 +10,15 @@ interface CatalogItem {
   description: string;
 }
 
+const PAGE_SIZE = 20;
+
 export default function MerchantAgentPanel() {
   const { addLog } = useAudit();
   const [catalog, setCatalog] = useState<CatalogItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,12 +66,27 @@ export default function MerchantAgentPanel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Filter by search term, then paginate — never render all 1001 at once
+  const filtered = useMemo(() => {
+    if (!search.trim()) return catalog;
+    const q = search.toLowerCase();
+    return catalog.filter(
+      (item) =>
+        item.name.toLowerCase().includes(q) ||
+        item.sku.toLowerCase().includes(q) ||
+        item.description.toLowerCase().includes(q)
+    );
+  }, [catalog, search]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const visible = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
   const formatPrice = (amount: number) =>
     `₹${amount.toLocaleString("en-IN")}`;
 
   return (
     <div className="flex flex-col h-full">
-      {/* Header — matches Buyer Agent panel conventions */}
+      {/* Header */}
       <div className="flex items-center justify-between pb-2 border-b border-purple-900/10 mb-2 shrink-0">
         <span className="text-xs font-semibold text-purple-400 uppercase tracking-wide">
           Merchant Agent
@@ -77,9 +96,8 @@ export default function MerchantAgentPanel() {
         </span>
       </div>
 
-      {/* Content area — scrollable */}
       <div className="flex-1 overflow-y-auto space-y-3 pr-1 text-xs min-h-0">
-        {/* Loading state */}
+        {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-8 space-x-2">
             <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping" />
@@ -89,7 +107,7 @@ export default function MerchantAgentPanel() {
           </div>
         )}
 
-        {/* Error state */}
+        {/* Error */}
         {!loading && error && (
           <div className="bg-red-950/20 border border-red-900/30 p-3 rounded-lg">
             <p className="font-mono text-[10px] text-red-400 mb-1">FETCH_FAILED</p>
@@ -103,20 +121,37 @@ export default function MerchantAgentPanel() {
           </div>
         )}
 
-        {/* Catalog status badge */}
+        {/* Catalog status + search */}
         {!loading && !error && (
-          <div className="bg-slate-900/70 border border-slate-850 p-2.5 rounded-lg text-slate-400">
-            <span className="text-purple-400 font-semibold">Catalog Status:</span>
-            <p className="mt-1 font-mono text-[11px] text-purple-300">
-              Sanitized (Proxy On) · {catalog.length} SKU{catalog.length !== 1 ? "s" : ""}
+          <>
+            <div className="bg-slate-900/70 border border-slate-850 p-2.5 rounded-lg text-slate-400">
+              <span className="text-purple-400 font-semibold">Catalog Status:</span>
+              <p className="mt-1 font-mono text-[11px] text-purple-300">
+                Sanitized (Proxy On) · {catalog.length} SKUs
+              </p>
+            </div>
+
+            {/* Search box */}
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(0); }}
+              placeholder="Search by name, SKU, or keyword…"
+              className="w-full bg-slate-900/60 border border-slate-700/50 rounded px-2.5 py-1.5 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-purple-700/60"
+            />
+
+            {/* Match count */}
+            <p className="text-[10px] text-slate-600 font-mono">
+              {search ? `${filtered.length} matches` : `Showing ${visible.length} of ${catalog.length}`}
+              {totalPages > 1 && ` · page ${page + 1}/${totalPages}`}
             </p>
-          </div>
+          </>
         )}
 
-        {/* SKU cards */}
+        {/* SKU cards — only PAGE_SIZE items rendered at once */}
         {!loading &&
           !error &&
-          catalog.map((item) => (
+          visible.map((item) => (
             <div
               key={item.sku}
               className="bg-purple-900/10 border border-purple-900/20 p-2.5 rounded-lg"
@@ -148,6 +183,26 @@ export default function MerchantAgentPanel() {
               </div>
             </div>
           ))}
+
+        {/* Pagination */}
+        {!loading && !error && totalPages > 1 && (
+          <div className="flex gap-2 pt-1 pb-2">
+            <button
+              onClick={() => setPage((p) => Math.max(0, p - 1))}
+              disabled={page === 0}
+              className="flex-1 py-1 text-[10px] font-mono bg-slate-800/60 hover:bg-slate-700 border border-slate-700/50 rounded text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed transition"
+            >
+              ← Prev
+            </button>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+              disabled={page >= totalPages - 1}
+              className="flex-1 py-1 text-[10px] font-mono bg-slate-800/60 hover:bg-slate-700 border border-slate-700/50 rounded text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed transition"
+            >
+              Next →
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

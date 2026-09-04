@@ -2,9 +2,6 @@ import { NextResponse } from "next/server";
 import { Groq } from "groq-sdk";
 import { StepSchema } from "@/lib/agentLoop";
 
-// Allow larger request bodies — multi-turn conversations can grow.
-export const config = { api: { bodyParser: { sizeLimit: "2mb" } } };
-
 // Groq's token limit means we should never send more than ~60KB of messages.
 // If the conversation has grown beyond this (e.g., 3 repair cycles), trim it.
 const MAX_PAYLOAD_CHARS = 60_000;
