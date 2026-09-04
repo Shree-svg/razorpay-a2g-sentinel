@@ -28,7 +28,7 @@ async function run() {
   try {
     payloads = JSON.parse(text);
   } catch (e) {
-    const match = String(text).match(/\[.*\]/s);
+    const match = String(text).match(/\[[\s\S]*\]/);
     payloads = match ? JSON.parse(match[0]) : [];
   }
   

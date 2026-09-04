@@ -99,7 +99,7 @@ export default function AttackSimulator() {
           return isStripped ? (
             <span
               key={i}
-              className="line-through text-rzp-error bg-red-100 px-0.5 rounded"
+              className="line-through text-rzp-error bg-rzp-error/10 px-0.5 rounded"
             >
               {part}
             </span>
@@ -123,17 +123,17 @@ export default function AttackSimulator() {
       >
         <span>{running ? "Running attack…" : "Inject Prompt Attack"}</span>
         {!result && !running && (
-          <span className="text-[10px] uppercase font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+          <span className="text-[10px] uppercase font-mono text-rzp-warning bg-rzp-warning/10 px-1.5 py-0.5 rounded border border-rzp-warning/20">
             Armed
           </span>
         )}
         {result && neutralized && (
-          <span className="text-[10px] uppercase font-mono text-rzp-success bg-green-50 px-1.5 py-0.5 rounded border border-green-200">
+          <span className="text-[10px] uppercase font-mono text-rzp-success bg-rzp-success/10 px-1.5 py-0.5 rounded border border-rzp-success/20">
             Neutralized
           </span>
         )}
         {result && !neutralized && (
-          <span className="text-[10px] uppercase font-mono text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 animate-pulse">
+          <span className="text-[10px] uppercase font-mono text-rzp-warning bg-rzp-warning/10 px-1.5 py-0.5 rounded border border-rzp-warning/20 animate-pulse">
             ⚠ Regression
           </span>
         )}
@@ -141,7 +141,7 @@ export default function AttackSimulator() {
 
       {/* Error state */}
       {error && (
-        <div className="bg-red-50 border border-red-200 p-2.5 rounded-lg text-xs text-rzp-error">
+        <div className="bg-rzp-error/10 border border-rzp-error/20 p-2.5 rounded-lg text-xs text-rzp-error">
           {error}
         </div>
       )}
@@ -151,7 +151,7 @@ export default function AttackSimulator() {
         <div className="space-y-2">
           {/* Status pill */}
           {neutralized ? (
-            <div className="flex items-center space-x-2 bg-green-50 border border-green-200 p-2 rounded-lg shadow-sm">
+            <div className="flex items-center space-x-2 bg-rzp-success/10 border border-rzp-success/20 p-2 rounded-lg shadow-sm">
               <span className="w-2 h-2 rounded-full bg-rzp-success animate-pulse shrink-0" />
               <span className="text-[11px] font-mono text-rzp-success uppercase tracking-wide font-bold">
                 Attack Neutralized — {result.stripped.length} injection
@@ -159,9 +159,9 @@ export default function AttackSimulator() {
               </span>
             </div>
           ) : (
-            <div className="flex items-center space-x-2 bg-amber-50 border border-amber-200 p-2 rounded-lg shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-amber-600 animate-pulse shrink-0" />
-              <span className="text-[11px] font-mono text-amber-700 uppercase tracking-wide font-bold">
+            <div className="flex items-center space-x-2 bg-rzp-warning/10 border border-rzp-warning/20 p-2 rounded-lg shadow-sm">
+              <span className="w-2 h-2 rounded-full bg-rzp-warning animate-pulse shrink-0" />
+              <span className="text-[11px] font-mono text-rzp-warning uppercase tracking-wide font-bold">
                 No Injection Detected — Possible Sanitization Regression
               </span>
             </div>
@@ -175,7 +175,7 @@ export default function AttackSimulator() {
           {/* Side-by-side panels */}
           <div className="grid grid-cols-2 gap-2 max-h-96 overflow-y-auto">
             {/* Raw (before) */}
-            <div className="bg-red-50 border border-red-200 rounded-lg p-2 shadow-sm">
+            <div className="bg-rzp-error/10 border border-rzp-error/20 rounded-lg p-2 shadow-sm">
               <p className="text-[10px] font-mono text-rzp-error mb-1 uppercase tracking-wide font-bold">
                 Raw (Unsanitized)
               </p>
@@ -185,7 +185,7 @@ export default function AttackSimulator() {
             </div>
 
             {/* Sanitized (after) */}
-            <div className="bg-green-50 border border-green-200 rounded-lg p-2 shadow-sm">
+            <div className="bg-rzp-success/10 border border-rzp-success/20 rounded-lg p-2 shadow-sm">
               <p className="text-[10px] font-mono text-rzp-success mb-1 uppercase tracking-wide font-bold">
                 Sanitized (Clean)
               </p>

@@ -43,7 +43,7 @@ export default function AuditLedger() {
       case "error":
         return "text-rzp-error font-bold";
       case "retry":
-        return "text-amber-600 font-bold";
+        return "text-rzp-warning font-bold";
       default:
         return "text-gray-500 font-bold";
     }
@@ -57,7 +57,7 @@ export default function AuditLedger() {
           <h2 className="text-sm font-semibold uppercase tracking-wider text-rzp-navy">
             Live Audit &amp; Verification Ledger
           </h2>
-          <span className="text-[10px] font-mono text-rzp-success font-bold bg-green-50 px-2 py-0.5 rounded border border-green-200">
+          <span className="text-[10px] font-mono text-rzp-success font-bold bg-rzp-success/10 px-2 py-0.5 rounded border border-rzp-success/20">
             LIVE MONITOR
           </span>
         </div>

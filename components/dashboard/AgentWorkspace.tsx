@@ -73,7 +73,7 @@ const { addLog } = useAudit();
       {/* Split-screen Agent Chat Windows */}
       <div className="flex-1 grid grid-cols-2 gap-4 min-h-0">
         {/* Buyer Agent (blue tint) */}
-        <div className="flex flex-col h-full bg-blue-50/50 border border-blue-100 rounded-lg p-3 overflow-hidden">
+        <div className="flex flex-col h-full bg-rzp-blue/5 border border-rzp-blue/20 rounded-lg p-3 overflow-hidden">
           <BuyerAgentPanel onOutcomeChange={setBuyerOutcome} />
         </div>
 
@@ -91,7 +91,7 @@ const { addLog } = useAudit();
                 <span className="w-2 h-2 rounded-full bg-rzp-blue mr-1.5 animate-pulse" />
                 HUMAN-IN-THE-LOOP APPROVAL
               </span>
-              <span className="text-[10px] font-mono text-rzp-success font-bold bg-green-50 px-2 py-0.5 rounded border border-green-200">GATEWAY_PASSED</span>
+              <span className="text-[10px] font-mono text-rzp-success font-bold bg-rzp-success/10 px-2 py-0.5 rounded border border-rzp-success/20">GATEWAY_PASSED</span>
             </div>
               {approvalStatus === 'approved' ? (
                 <p className="text-xs text-rzp-success font-medium">
@@ -102,7 +102,7 @@ const { addLog } = useAudit();
               ) : (
                 <div className="flex space-x-3 mt-3">
                   <button onClick={handleApprove} className="px-4 py-1.5 bg-rzp-blue hover:bg-rzp-blue-dark text-white text-xs font-medium rounded-lg transition-colors shadow-sm">Approve Transaction</button>
-                  <button onClick={handleReject} className="px-4 py-1.5 bg-rzp-error hover:bg-red-700 text-white text-xs font-medium rounded-lg transition-colors shadow-sm">Reject</button>
+                  <button onClick={handleReject} className="px-4 py-1.5 bg-rzp-error hover:opacity-90 text-white text-xs font-medium rounded-lg transition-colors shadow-sm">Reject</button>
                 </div>
               )}
           </div>

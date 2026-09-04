@@ -96,7 +96,7 @@ export default function ControlPanel() {
             Select Catalog Preset
           </h3>
           {presetStatus && (
-            <span className="text-[10px] font-mono text-rzp-success bg-green-50 px-1.5 py-0.5 rounded border border-green-200">
+            <span className="text-[10px] font-mono text-rzp-success bg-rzp-success/10 px-1.5 py-0.5 rounded border border-rzp-success/20">
               {presetStatus}
             </span>
           )}
@@ -133,7 +133,7 @@ export default function ControlPanel() {
         {process.env.NODE_ENV !== "production" && (
           <div className="flex flex-col gap-2 mt-2">
             <button
-              className="w-full py-1.5 text-xs bg-white hover:bg-red-50 text-gray-700 hover:text-rzp-error border border-gray-200 hover:border-red-200 rounded-lg shadow-sm transition-colors disabled:opacity-50"
+              className="w-full py-1.5 text-xs bg-white hover:bg-rzp-error/5 text-gray-700 hover:text-rzp-error border border-gray-200 hover:border-rzp-error/20 rounded-lg shadow-sm transition-colors disabled:opacity-50"
               disabled={!!runningSim}
               onClick={async () => {
                 setRunningSim("price_ceiling");
@@ -179,7 +179,7 @@ export default function ControlPanel() {
             </button>
 
             <button
-              className="w-full py-1.5 text-xs bg-white hover:bg-red-50 text-gray-700 hover:text-rzp-error border border-gray-200 hover:border-red-200 rounded-lg shadow-sm transition-colors disabled:opacity-50"
+              className="w-full py-1.5 text-xs bg-white hover:bg-rzp-error/5 text-gray-700 hover:text-rzp-error border border-gray-200 hover:border-rzp-error/20 rounded-lg shadow-sm transition-colors disabled:opacity-50"
               disabled={!!runningSim}
               onClick={async () => {
                 setRunningSim("malformed_llm");
@@ -206,7 +206,7 @@ export default function ControlPanel() {
             </button>
 
             <button
-              className="w-full py-1.5 text-xs bg-white hover:bg-red-50 text-gray-700 hover:text-rzp-error border border-gray-200 hover:border-red-200 rounded-lg shadow-sm transition-colors disabled:opacity-50"
+              className="w-full py-1.5 text-xs bg-white hover:bg-rzp-error/5 text-gray-700 hover:text-rzp-error border border-gray-200 hover:border-rzp-error/20 rounded-lg shadow-sm transition-colors disabled:opacity-50"
               disabled={!!runningSim}
               onClick={async () => {
                 setRunningSim("token_expiry");
@@ -252,7 +252,7 @@ export default function ControlPanel() {
             </button>
 
             <button
-              className="w-full py-1.5 text-xs bg-white hover:bg-red-50 text-gray-700 hover:text-rzp-error border border-gray-200 hover:border-red-200 rounded-lg shadow-sm transition-colors disabled:opacity-50"
+              className="w-full py-1.5 text-xs bg-white hover:bg-rzp-error/5 text-gray-700 hover:text-rzp-error border border-gray-200 hover:border-rzp-error/20 rounded-lg shadow-sm transition-colors disabled:opacity-50"
               disabled={!!runningSim}
               onClick={async () => {
                 setRunningSim("token_replay");
@@ -303,7 +303,7 @@ export default function ControlPanel() {
             </button>
 
             <button
-              className="w-full py-1.5 text-xs bg-white hover:bg-amber-50 text-gray-700 hover:text-amber-600 border border-gray-200 hover:border-amber-200 rounded-lg shadow-sm transition-colors disabled:opacity-50 mt-4"
+              className="w-full py-1.5 text-xs bg-white hover:bg-rzp-warning/5 text-gray-700 hover:text-rzp-warning border border-gray-200 hover:border-rzp-warning/20 rounded-lg shadow-sm transition-colors disabled:opacity-50 mt-4"
               disabled={!!runningSim}
               onClick={async () => {
                 setRunningSim("adversarial_agent");
@@ -330,7 +330,7 @@ export default function ControlPanel() {
                     payloads = typeof body === "string" ? JSON.parse(body) : body;
                     if (!Array.isArray(payloads)) throw new Error("Not an array");
                   } catch (e) {
-                    const match = String(body).match(/\[.*\]/s);
+                    const match = String(body).match(/\[[\s\S]*\]/);
                     payloads = match ? JSON.parse(match[0]) : [];
                   }
 
