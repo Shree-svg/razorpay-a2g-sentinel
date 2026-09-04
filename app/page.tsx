@@ -32,7 +32,7 @@ export default function HomePage() {
 
       {/* Main 3-Column Dashboard Area (Resizable) */}
       <div className="flex-1 p-4 min-h-0">
-        <PanelGroup direction="horizontal" className="h-full">
+        <PanelGroup orientation="horizontal" className="h-full">
           {/* Left Column: Control & Red Team Suite (25%) */}
           <Panel defaultSize={25} minSize={15}>
             <section className="flex flex-col h-full min-h-0 pr-2">
