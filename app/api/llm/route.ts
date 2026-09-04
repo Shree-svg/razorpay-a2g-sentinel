@@ -2,9 +2,15 @@ import { NextResponse } from "next/server";
 import { Groq } from "groq-sdk";
 import { StepSchema } from "@/lib/agentLoop";
 
-// Groq's token limit means we should never send more than ~60KB of messages.
-// If the conversation has grown beyond this (e.g., 3 repair cycles), trim it.
-const MAX_PAYLOAD_CHARS = 60_000;
+// Trim conversation if it grows beyond this to avoid rate limit spikes.
+const MAX_PAYLOAD_CHARS = 40_000;
+
+/** Parse the "Please try again in Xs" wait time from a Groq 429 message. */
+function parseRetryAfterMs(message: string): number {
+  const match = message.match(/try again in ([\d.]+)s/i);
+  if (match) return Math.ceil(parseFloat(match[1]) * 1000);
+  return 20_000; // default 20s
+}
 
 export async function POST(request: Request) {
   const GROQ_API_KEY = process.env.GROQ_API_KEY;
@@ -42,58 +48,65 @@ export async function POST(request: Request) {
     fullMessages = [systemPrompt, ...recent];
   }
 
-  try {
-    const completion = await client.chat.completions.create({
-      model: "openai/gpt-oss-120b",
-      messages: fullMessages,
-      response_format: { type: "json_object" } as any,
-    });
+  const MAX_RETRIES = 3;
+  let lastErr: any;
 
-    const rawContent = completion.choices?.[0]?.message?.content?.trim();
-    if (!rawContent) {
-      return NextResponse.json({ reason: "Empty response from LLM" }, { status: 502 });
-    }
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const completion = await client.chat.completions.create({
+        model: "openai/gpt-oss-120b",
+        messages: fullMessages,
+        response_format: { type: "json_object" } as any,
+      });
 
-    const parsed = JSON.parse(rawContent);
-    const validated = StepSchema.parse(parsed);
-
-    return NextResponse.json(validated, { status: 200 });
-  } catch (err: any) {
-    // Log full error for debugging 413s
-    console.error("[/api/llm] Groq error:", {
-      status: err?.status,
-      message: err?.message,
-      error: err?.error,
-      payloadSize: JSON.stringify(fullMessages).length,
-      messageCount: fullMessages.length,
-    });
-
-    // If Groq returns 413 (payload too large), retry with only last 2 messages
-    if (err?.status === 413) {
-      try {
-        const trimmed = [systemPrompt, ...messages.slice(-2)];
-        const retryCompletion = await client.chat.completions.create({
-          model: "openai/gpt-oss-120b",
-          messages: trimmed,
-          response_format: { type: "json_object" } as any,
-        });
-        const retryContent = retryCompletion.choices?.[0]?.message?.content?.trim();
-        if (retryContent) {
-          const parsed = JSON.parse(retryContent);
-          const validated = StepSchema.parse(parsed);
-          return NextResponse.json(validated, { status: 200 });
-        }
-      } catch (retryErr: any) {
-        console.error("[/api/llm] Retry after 413 also failed:", retryErr?.message);
+      const rawContent = completion.choices?.[0]?.message?.content?.trim();
+      if (!rawContent) {
+        return NextResponse.json({ reason: "Empty response from LLM" }, { status: 502 });
       }
-    }
 
-    // Detect Groq model deprecation (404 with model_not_found)
-    const isModelNotFound = err?.status === 404 && String(err?.message).includes("model_not_found");
-    const reason = isModelNotFound
-      ? "GROQ MODEL DEPRECATED — check console.groq.com/docs/deprecations and update app/api/llm/route.ts"
-      : err?.message ?? "Unexpected error";
-    const status = err?.status ?? 500;
-    return NextResponse.json({ reason }, { status });
+      const parsed = JSON.parse(rawContent);
+      const validated = StepSchema.parse(parsed);
+      return NextResponse.json(validated, { status: 200 });
+
+    } catch (err: any) {
+      lastErr = err;
+
+      // 429 Rate limit — wait and retry
+      if (err?.status === 429) {
+        const waitMs = parseRetryAfterMs(err?.message ?? "");
+        console.warn(`[/api/llm] 429 rate limit on attempt ${attempt}/${MAX_RETRIES}. Waiting ${waitMs}ms…`);
+        if (attempt < MAX_RETRIES) {
+          await new Promise((r) => setTimeout(r, waitMs));
+          continue;
+        }
+      }
+
+      // 413 — retry with trimmed messages
+      if (err?.status === 413 && attempt < MAX_RETRIES) {
+        fullMessages = [systemPrompt, ...messages.slice(-2)];
+        console.warn(`[/api/llm] 413 on attempt ${attempt}, retrying with ${fullMessages.length} messages`);
+        continue;
+      }
+
+      // Any other error — log and break
+      console.error("[/api/llm] Groq error:", {
+        status: err?.status, message: err?.message,
+        payloadSize: JSON.stringify(fullMessages).length,
+        messageCount: fullMessages.length,
+        attempt,
+      });
+      break;
+    }
   }
+
+  // All retries exhausted
+  const isModelNotFound = lastErr?.status === 404 && String(lastErr?.message).includes("model_not_found");
+  const is429 = lastErr?.status === 429;
+  const reason = is429
+    ? "Rate limit reached — please wait ~20 seconds and try again"
+    : isModelNotFound
+    ? "GROQ MODEL DEPRECATED — check console.groq.com/docs/deprecations and update app/api/llm/route.ts"
+    : lastErr?.message ?? "Unexpected error";
+  const status = is429 ? 429 : (lastErr?.status ?? 500);
+  return NextResponse.json({ reason }, { status });
 }

@@ -500,7 +500,7 @@ export async function runAgentLoop(
   const catalogArray = CatalogSchema.safeParse(fullCatalog).success
     ? (fullCatalog as Record<string, unknown>[])
     : [];
-  const catalog = filterCatalogForGoal(catalogArray, goal, 30);
+  const catalog = filterCatalogForGoal(catalogArray, goal, 15);
   onStep?.({ kind: "observe", catalog });
   conversation.push({
     role: "user",
