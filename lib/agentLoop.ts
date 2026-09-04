@@ -410,6 +410,51 @@ async function actAndVerify(
 }
 
 /**
+ * Scores a catalog item against the user's goal.
+ * Returns items with the highest keyword overlap, capped at `limit`.
+ * This keeps LLM context lean even with 1000+ SKU catalogs.
+ */
+function filterCatalogForGoal(
+  catalog: Record<string, unknown>[],
+  goal: string,
+  limit = 30
+): Record<string, unknown>[] {
+  // Tokenise the goal into lowercase words, stripping stop-words and numbers
+  const stopWords = new Set([
+    "buy", "get", "find", "purchase", "order", "me", "a", "an", "the",
+    "under", "below", "within", "for", "less", "than", "rupees", "inr",
+    "rs", "₹", "of", "and", "or", "with", "at", "in", "to", "i", "want",
+  ]);
+  const keywords = goal
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !stopWords.has(w) && isNaN(Number(w)));
+
+  if (keywords.length === 0) {
+    return catalog.slice(0, limit);
+  }
+
+  const scored = catalog.map((item) => {
+    const haystack = [
+      String(item.name ?? ""),
+      String(item.description ?? ""),
+    ]
+      .join(" ")
+      .toLowerCase();
+    const score = keywords.reduce(
+      (acc, kw) => acc + (haystack.includes(kw) ? 1 : 0),
+      0
+    );
+    return { item, score };
+  });
+
+  // Sort by score desc, then return top `limit`; always include score>0 items first
+  scored.sort((a, b) => b.score - a.score);
+  return scored.slice(0, limit).map((s) => s.item);
+}
+
+/**
  * Observe → Plan → Act → Verify until a purchase is gateway-authorized
  * (still awaiting human approval — rules.md §4.1) or a halt status fires.
  *
@@ -444,11 +489,17 @@ export async function runAgentLoop(
     { role: "system", content: SYSTEM_PROMPT },
   ];
 
-  const catalog = await tools.fetchCatalog();
+  const fullCatalog = await tools.fetchCatalog();
+  // Filter to top 30 most relevant items so the LLM prompt stays within token limits.
+  // With 1000+ SKUs the raw catalog would exceed Groq's context window (413 Too Large).
+  const catalogArray = CatalogSchema.safeParse(fullCatalog).success
+    ? (fullCatalog as Record<string, unknown>[])
+    : [];
+  const catalog = filterCatalogForGoal(catalogArray, goal, 30);
   onStep?.({ kind: "observe", catalog });
   conversation.push({
     role: "user",
-    content: `OBSERVE — sanitized catalog JSON:\n${JSON.stringify(catalog)}`,
+    content: `OBSERVE — sanitized catalog JSON (${catalog.length} most relevant of ${catalogArray.length} total SKUs):\n${JSON.stringify(catalog)}`,
   });
   conversation.push({
     role: "user",
