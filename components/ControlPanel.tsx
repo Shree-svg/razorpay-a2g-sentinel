@@ -32,6 +32,7 @@ export default function ControlPanel() {
   const { addLog } = useAudit();
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [presetStatus, setPresetStatus] = useState<string | null>(null);
+  const [runningSim, setRunningSim] = useState<string | null>(null);
 
   const handlePreset = async (key: string) => {
     const preset = PRESETS[key];
@@ -118,8 +119,10 @@ export default function ControlPanel() {
         {process.env.NODE_ENV !== "production" && (
           <div className="flex flex-col gap-2 mt-2">
             <button
-              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded"
+              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded disabled:opacity-50"
+              disabled={!!runningSim}
               onClick={async () => {
+                setRunningSim("price_ceiling");
                 const tools = {
                   invokeLlm: async (messages: any) => {
                     const resp = await fetch("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) });
@@ -140,15 +143,21 @@ export default function ControlPanel() {
                 try {
                   const result = await runAgentLoop("buy ultra-luxury watch for 1000000 INR", tools, () => {});
                   addLog({ actor: "buyer", action: "price_ceiling_test", payload: result, status: result?.status?.includes("HALTED") ? "blocked" : "success" });
-                } catch (e) { console.error(e); }
+                } catch (e: any) { 
+                  addLog({ actor: "buyer", action: "price_ceiling_test", payload: { error: e.message ?? String(e) }, status: "error" });
+                } finally {
+                  setRunningSim(null);
+                }
               }}
             >
-              Trigger Price Ceiling Breach
+              {runningSim === "price_ceiling" ? "Running..." : "Trigger Price Ceiling Breach"}
             </button>
 
             <button
-              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded"
+              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded disabled:opacity-50"
+              disabled={!!runningSim}
               onClick={async () => {
+                setRunningSim("malformed_llm");
                 const tools = {
                   invokeLlm: async () => "I am a malformed LLM response without JSON.",
                   fetchCatalog: async () => [],
@@ -158,17 +167,28 @@ export default function ControlPanel() {
                 try {
                   const result = await runAgentLoop("buy anything", tools, () => {});
                   addLog({ actor: "buyer", action: "malformed_llm_test", payload: result, status: result?.status === "HALTED_FAILED_VALIDATION" ? "blocked" : "error" });
-                } catch (e) { console.error(e); }
+                } catch (e: any) {
+                  addLog({ actor: "buyer", action: "malformed_llm_test", payload: { error: e.message ?? String(e) }, status: "error" });
+                } finally {
+                  setRunningSim(null);
+                }
               }}
             >
-              Trigger Malformed LLM
+              {runningSim === "malformed_llm" ? "Running..." : "Trigger Malformed LLM"}
             </button>
 
             <button
-              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded"
+              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded disabled:opacity-50"
+              disabled={!!runningSim}
               onClick={async () => {
+                setRunningSim("token_expiry");
                 const tools = {
-                  invokeLlm: async (messages: any) => { const r = await fetch("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) }); return r.json(); },
+                  invokeLlm: async (messages: any) => { 
+                    const r = await fetch("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) }); 
+                    const body = await r.json();
+                    if (!r.ok) throw new Error(body?.reason ?? `HTTP ${r.status}`);
+                    return body;
+                  },
                   fetchCatalog: async () => { const r = await fetch("/api/merchant"); return r.json(); },
                   mintIntent: async (sku: string, maxAmount: number) => {
                     const r = await fetch("/api/buyer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sku, maxAmount, expiresInSeconds: 1 }) });
@@ -183,17 +203,28 @@ export default function ControlPanel() {
                 try {
                   const result = await runAgentLoop("buy noise cancelling headphones under 30000 INR", tools, () => {});
                   addLog({ actor: "buyer", action: "token_expiry_test", payload: result, status: result?.status === "HALTED_TERMINAL_SECURITY" ? "blocked" : "error" });
-                } catch (e) { console.error(e); }
+                } catch (e: any) { 
+                  addLog({ actor: "buyer", action: "token_expiry_test", payload: { error: e.message ?? String(e) }, status: "error" });
+                } finally {
+                  setRunningSim(null);
+                }
               }}
             >
-              Trigger Token Expiry
+              {runningSim === "token_expiry" ? "Running..." : "Trigger Token Expiry"}
             </button>
 
             <button
-              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded"
+              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded disabled:opacity-50"
+              disabled={!!runningSim}
               onClick={async () => {
+                setRunningSim("token_replay");
                 const tools = {
-                  invokeLlm: async (messages: any) => { const r = await fetch("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) }); return r.json(); },
+                  invokeLlm: async (messages: any) => { 
+                    const r = await fetch("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) }); 
+                    const body = await r.json();
+                    if (!r.ok) throw new Error(body?.reason ?? `HTTP ${r.status}`);
+                    return body;
+                  },
                   fetchCatalog: async () => { const r = await fetch("/api/merchant"); return r.json(); },
                   mintIntent: async (sku: string, maxAmount: number, expiresInSeconds: number) => {
                     const r = await fetch("/api/buyer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sku, maxAmount, expiresInSeconds }) });
@@ -210,11 +241,17 @@ export default function ControlPanel() {
                     const { token, invoice } = result.result as any;
                     const replayEnvelope = await tools.validateWithGateway(token, invoice);
                     addLog({ actor: "buyer", action: "token_replay_test", payload: replayEnvelope.body, status: replayEnvelope.httpStatus === 403 ? "blocked" : "error" });
+                  } else {
+                    addLog({ actor: "buyer", action: "token_replay_test", payload: result, status: "error" });
                   }
-                } catch (e) { console.error(e); }
+                } catch (e: any) { 
+                  addLog({ actor: "buyer", action: "token_replay_test", payload: { error: e.message ?? String(e) }, status: "error" });
+                } finally {
+                  setRunningSim(null);
+                }
               }}
             >
-              Trigger Token Replay
+              {runningSim === "token_replay" ? "Running..." : "Trigger Token Replay"}
             </button>
           </div>
         )}
