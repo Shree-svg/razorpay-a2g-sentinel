@@ -4,6 +4,8 @@ import ControlPanel from "@/components/ControlPanel";
 import AgentWorkspace from "@/components/AgentWorkspace";
 import AuditLedger from "@/components/AuditLedger";
 
+import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
+
 export default function HomePage() {
   return (
     <main className="h-screen w-screen bg-bitBg flex flex-col overflow-hidden text-slate-100">
@@ -28,22 +30,34 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Main 3-Column Dashboard Area */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-[25fr_45fr_30fr] gap-4 p-4 min-h-0">
-        {/* Left Column: Control & Red Team Suite (25%) */}
-        <section className="flex flex-col h-full min-h-0">
-          <ControlPanel />
-        </section>
+      {/* Main 3-Column Dashboard Area (Resizable) */}
+      <div className="flex-1 p-4 min-h-0">
+        <PanelGroup direction="horizontal" className="h-full">
+          {/* Left Column: Control & Red Team Suite (25%) */}
+          <Panel defaultSize={25} minSize={15}>
+            <section className="flex flex-col h-full min-h-0 pr-2">
+              <ControlPanel />
+            </section>
+          </Panel>
 
-        {/* Center Column: Dual Agent Workspace (45%) */}
-        <section className="flex flex-col h-full min-h-0">
-          <AgentWorkspace />
-        </section>
+          <PanelResizeHandle className="w-1.5 hover:bg-slate-700/50 active:bg-bitPrimary/50 transition-colors cursor-col-resize rounded-full mx-1" />
 
-        {/* Right Column: Live Audit & Verification Ledger (30%) */}
-        <section className="flex flex-col h-full min-h-0">
-          <AuditLedger />
-        </section>
+          {/* Center Column: Dual Agent Workspace (45%) */}
+          <Panel defaultSize={45} minSize={30}>
+            <section className="flex flex-col h-full min-h-0 px-1">
+              <AgentWorkspace />
+            </section>
+          </Panel>
+
+          <PanelResizeHandle className="w-1.5 hover:bg-slate-700/50 active:bg-bitPrimary/50 transition-colors cursor-col-resize rounded-full mx-1" />
+
+          {/* Right Column: Live Audit & Verification Ledger (30%) */}
+          <Panel defaultSize={30} minSize={20}>
+            <section className="flex flex-col h-full min-h-0 pl-2">
+              <AuditLedger />
+            </section>
+          </Panel>
+        </PanelGroup>
       </div>
     </main>
   );
