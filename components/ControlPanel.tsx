@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AttackSimulator from "./AttackSimulator";
 import { runAgentLoop } from "@/lib/agentLoop";
 import { useAudit } from "@/contexts/AuditContext";
