@@ -1,11 +1,66 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import AttackSimulator from "./AttackSimulator";
 import { runAgentLoop } from "@/lib/agentLoop";
 import { useAudit } from "@/contexts/AuditContext";
 
+// Preset definitions — keywords used to filter the live catalog
+const PRESETS: Record<string, { label: string; keywords: string[]; sampleGoal: string }> = {
+  Electronics: {
+    label: "Electronics",
+    keywords: ["headphone", "keyboard", "mouse", "monitor", "laptop", "tablet", "phone", "smartphone", "earbuds", "airpods", "speaker", "camera", "drone", "ssd", "storage", "charger", "power bank", "router"],
+    sampleGoal: "buy noise cancelling headphones under 30000 rupees",
+  },
+  Shoes: {
+    label: "Fashion",
+    keywords: ["shoe", "sneaker", "running", "boot", "jacket", "clothing", "shirt", "jeans", "shorts", "apparel", "fashion", "wear", "watch", "wallet", "bag"],
+    sampleGoal: "buy running shoes under 15000 rupees",
+  },
+  SaaS: {
+    label: "SaaS Seats",
+    keywords: ["saas", "license", "subscription", "software", "microsoft", "adobe", "notion", "slack", "zoom", "github", "figma", "plan", "annual", "monthly", "seats"],
+    sampleGoal: "buy a SaaS software license under 5000 rupees",
+  },
+};
+
+// Broadcast active preset so BuyerAgentPanel can pre-fill the goal input
+function broadcastPreset(goal: string) {
+  window.dispatchEvent(new CustomEvent("bit:preset", { detail: { goal } }));
+}
+
 export default function ControlPanel() {
   const { addLog } = useAudit();
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [presetStatus, setPresetStatus] = useState<string | null>(null);
+
+  const handlePreset = async (key: string) => {
+    const preset = PRESETS[key];
+    setActivePreset(key);
+    setPresetStatus("Filtering…");
+
+    try {
+      const resp = await fetch("/api/merchant");
+      const catalog: any[] = await resp.json();
+      const filtered = catalog.filter((item) =>
+        preset.keywords.some(
+          (kw) =>
+            item.name.toLowerCase().includes(kw) ||
+            item.description.toLowerCase().includes(kw)
+        )
+      );
+      setPresetStatus(`${filtered.length} SKUs matched`);
+      addLog({
+        actor: "merchant",
+        action: "catalog_preset_applied",
+        payload: { preset: key, matchedSkus: filtered.length, sampleGoal: preset.sampleGoal },
+        status: "success",
+      });
+      broadcastPreset(preset.sampleGoal);
+    } catch {
+      setPresetStatus("Failed");
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-[#0f172a]/40 border border-slate-800 rounded-lg p-4 space-y-6">
       {/* Header */}
@@ -18,28 +73,48 @@ export default function ControlPanel() {
         </p>
       </div>
 
-      {/* Preset Selector Placeholder */}
-      <div className="border border-slate-850 bg-slate-900/50 rounded-lg p-4 space-y-3">
-        <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
-          Select Catalog Preset
-        </h3>
-        <div className="grid grid-cols-3 gap-2">
-          {["Shoes", "Electronics", "SaaS Seats"].map((preset) => (
-            <button
-              key={preset}
-              disabled
-              className="py-2 px-3 text-xs bg-slate-800/80 hover:bg-slate-800 border border-slate-700/50 rounded text-slate-400 cursor-not-allowed text-center transition"
-            >
-              {preset}
-            </button>
-          ))}
+      {/* Catalog Preset Selector — now functional */}
+      <div className="border border-slate-800 bg-slate-900/50 rounded-lg p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
+            Select Catalog Preset
+          </h3>
+          {presetStatus && (
+            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-900/30">
+              {presetStatus}
+            </span>
+          )}
         </div>
+        <div className="grid grid-cols-3 gap-2">
+          {Object.entries(PRESETS).map(([key, { label }]) => {
+            const isActive = activePreset === key;
+            return (
+              <button
+                key={key}
+                onClick={() => handlePreset(key)}
+                className={`py-2 px-3 text-xs border rounded text-center transition font-medium ${
+                  isActive
+                    ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/30"
+                    : "bg-slate-800/80 hover:bg-slate-700 border-slate-700/50 text-slate-300 hover:text-white"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
+        {activePreset && (
+          <p className="text-[10px] text-slate-500 leading-relaxed">
+            <span className="text-blue-400">Goal pre-filled in Buyer Agent ↗</span> — hit{" "}
+            <span className="text-white font-mono">Run</span> to execute.
+          </p>
+        )}
       </div>
 
       {/* Red Team Simulation Buttons */}
       <div className="border border-amber-900/30 bg-amber-950/5 rounded-lg p-4 space-y-3 relative overflow-auto">
-        {/* Warning strip border effect */}
-        {/* Dev-only Red Team Simulation Tests */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 opacity-60" />
+
         {process.env.NODE_ENV !== "production" && (
           <div className="flex flex-col gap-2 mt-2">
             <button
@@ -49,31 +124,23 @@ export default function ControlPanel() {
                   invokeLlm: async (messages: any) => {
                     const resp = await fetch("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) });
                     const body = await resp.json();
-                    if (!resp.ok) { throw new Error(body?.reason ?? `HTTP ${resp.status}`); }
+                    if (!resp.ok) throw new Error(body?.reason ?? `HTTP ${resp.status}`);
                     return body;
                   },
-                  fetchCatalog: async () => {
-                    const resp = await fetch("/api/merchant");
-                    return await resp.json();
-                  },
+                  fetchCatalog: async () => { const r = await fetch("/api/merchant"); return r.json(); },
                   mintIntent: async (sku: string, maxAmount: number, expiresInSeconds: number) => {
-                    const resp = await fetch("/api/buyer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sku, maxAmount, expiresInSeconds }) });
-                    const body = await resp.json().catch(()=>({}));
-                    return { httpStatus: resp.status, body };
+                    const r = await fetch("/api/buyer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sku, maxAmount, expiresInSeconds }) });
+                    return { httpStatus: r.status, body: await r.json().catch(() => ({})) };
                   },
                   validateWithGateway: async (token: unknown, invoice: unknown) => {
-                    const resp = await fetch("/api/gateway", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, invoice }) });
-                    const body = await resp.json().catch(()=>({}));
-                    return { httpStatus: resp.status, body };
+                    const r = await fetch("/api/gateway", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, invoice }) });
+                    return { httpStatus: r.status, body: await r.json().catch(() => ({})) };
                   },
                 };
-                
                 try {
-                  const result = await runAgentLoop("buy ultra‑luxury watch for 1000000 INR", tools, () => {});
+                  const result = await runAgentLoop("buy ultra-luxury watch for 1000000 INR", tools, () => {});
                   addLog({ actor: "buyer", action: "price_ceiling_test", payload: result, status: result?.status?.includes("HALTED") ? "blocked" : "success" });
-                } catch (e) {
-                  console.error(e);
-                }
+                } catch (e) { console.error(e); }
               }}
             >
               Trigger Price Ceiling Breach
@@ -91,9 +158,7 @@ export default function ControlPanel() {
                 try {
                   const result = await runAgentLoop("buy anything", tools, () => {});
                   addLog({ actor: "buyer", action: "malformed_llm_test", payload: result, status: result?.status === "HALTED_FAILED_VALIDATION" ? "blocked" : "error" });
-                } catch (e) {
-                  console.error(e);
-                }
+                } catch (e) { console.error(e); }
               }}
             >
               Trigger Malformed LLM
@@ -103,32 +168,22 @@ export default function ControlPanel() {
               className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded"
               onClick={async () => {
                 const tools = {
-                  invokeLlm: async (messages: any) => {
-                    const resp = await fetch("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) });
-                    return await resp.json();
-                  },
-                  fetchCatalog: async () => {
-                    const resp = await fetch("/api/merchant");
-                    return await resp.json();
-                  },
+                  invokeLlm: async (messages: any) => { const r = await fetch("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) }); return r.json(); },
+                  fetchCatalog: async () => { const r = await fetch("/api/merchant"); return r.json(); },
                   mintIntent: async (sku: string, maxAmount: number) => {
-                    const resp = await fetch("/api/buyer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sku, maxAmount, expiresInSeconds: 1 }) });
-                    const body = await resp.json().catch(()=>({}));
-                    return { httpStatus: resp.status, body };
+                    const r = await fetch("/api/buyer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sku, maxAmount, expiresInSeconds: 1 }) });
+                    return { httpStatus: r.status, body: await r.json().catch(() => ({})) };
                   },
                   validateWithGateway: async (token: unknown, invoice: unknown) => {
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                    const resp = await fetch("/api/gateway", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, invoice }) });
-                    const body = await resp.json().catch(()=>({}));
-                    return { httpStatus: resp.status, body };
+                    await new Promise((res) => setTimeout(res, 1500));
+                    const r = await fetch("/api/gateway", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, invoice }) });
+                    return { httpStatus: r.status, body: await r.json().catch(() => ({})) };
                   },
                 };
                 try {
                   const result = await runAgentLoop("buy noise cancelling headphones under 30000 INR", tools, () => {});
                   addLog({ actor: "buyer", action: "token_expiry_test", payload: result, status: result?.status === "HALTED_TERMINAL_SECURITY" ? "blocked" : "error" });
-                } catch (e) {
-                  console.error(e);
-                }
+                } catch (e) { console.error(e); }
               }}
             >
               Trigger Token Expiry
@@ -138,23 +193,15 @@ export default function ControlPanel() {
               className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded"
               onClick={async () => {
                 const tools = {
-                  invokeLlm: async (messages: any) => {
-                    const resp = await fetch("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) });
-                    return await resp.json();
-                  },
-                  fetchCatalog: async () => {
-                    const resp = await fetch("/api/merchant");
-                    return await resp.json();
-                  },
+                  invokeLlm: async (messages: any) => { const r = await fetch("/api/llm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ messages }) }); return r.json(); },
+                  fetchCatalog: async () => { const r = await fetch("/api/merchant"); return r.json(); },
                   mintIntent: async (sku: string, maxAmount: number, expiresInSeconds: number) => {
-                    const resp = await fetch("/api/buyer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sku, maxAmount, expiresInSeconds }) });
-                    const body = await resp.json().catch(()=>({}));
-                    return { httpStatus: resp.status, body };
+                    const r = await fetch("/api/buyer", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sku, maxAmount, expiresInSeconds }) });
+                    return { httpStatus: r.status, body: await r.json().catch(() => ({})) };
                   },
                   validateWithGateway: async (token: unknown, invoice: unknown) => {
-                    const resp = await fetch("/api/gateway", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, invoice }) });
-                    const body = await resp.json().catch(()=>({}));
-                    return { httpStatus: resp.status, body };
+                    const r = await fetch("/api/gateway", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, invoice }) });
+                    return { httpStatus: r.status, body: await r.json().catch(() => ({})) };
                   },
                 };
                 try {
@@ -164,9 +211,7 @@ export default function ControlPanel() {
                     const replayEnvelope = await tools.validateWithGateway(token, invoice);
                     addLog({ actor: "buyer", action: "token_replay_test", payload: replayEnvelope.body, status: replayEnvelope.httpStatus === 403 ? "blocked" : "error" });
                   }
-                } catch (e) {
-                  console.error(e);
-                }
+                } catch (e) { console.error(e); }
               }}
             >
               Trigger Token Replay
@@ -174,7 +219,6 @@ export default function ControlPanel() {
           </div>
         )}
 
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 opacity-60" />
         <h3 className="text-xs font-semibold text-amber-500/90 uppercase tracking-wide mt-4">
           Red Team Simulation
         </h3>
@@ -182,7 +226,6 @@ export default function ControlPanel() {
           Simulate runtime attacks to verify sanitization and validation limits.
         </p>
         <div className="flex flex-col gap-2">
-          {/* Live attack simulator — replaces the static "Inject Prompt Attack" placeholder */}
           <AttackSimulator />
         </div>
       </div>

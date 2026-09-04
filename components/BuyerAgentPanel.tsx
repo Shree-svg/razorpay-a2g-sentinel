@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { runAgentLoop } from "@/lib/agentLoop";
 import { useAudit } from "@/contexts/AuditContext";
 
@@ -15,6 +15,21 @@ export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProp
   const [attempt, setAttempt] = useState(0);
   const [outcome, setOutcome] = useState<any>(null);
   const [validationError, setValidationError] = useState("");
+
+  // Listen for catalog preset events fired by ControlPanel
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ goal: string }>).detail;
+      if (detail?.goal) {
+        setGoal(detail.goal);
+        setValidationError("");
+        setOutcome(null);
+        onOutcomeChange?.(null);
+      }
+    };
+    window.addEventListener("bit:preset", handler);
+    return () => window.removeEventListener("bit:preset", handler);
+  }, [onOutcomeChange]);
 
   const log = (actor: "buyer" | "merchant" | "gateway", action: string, payload: unknown, status: "success" | "blocked" | "error" | "retry") => {
     addLog({ actor, action, payload, status });
