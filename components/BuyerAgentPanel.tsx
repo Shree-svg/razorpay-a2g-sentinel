@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { runAgentLoop } from "@/lib/agentLoop";
 import { useAudit } from "@/contexts/AuditContext";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface BuyerAgentPanelProps {
   onOutcomeChange?: (outcome: any) => void;
@@ -9,6 +10,7 @@ interface BuyerAgentPanelProps {
 
 export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProps) {
   const { addLog } = useAudit();
+  const { settings } = useSettings();
   const [goal, setGoal] = useState("");
   const [running, setRunning] = useState(false);
   const [stage, setStage] = useState<string | null>(null);
@@ -35,13 +37,23 @@ export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProp
     addLog({ actor, action, payload, status });
   };
 
+  let currentRunTokens = 0;
+
   const tools = {
     invokeLlm: async (messages: any) => {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (settings.apiKey) headers["X-Groq-Api-Key"] = settings.apiKey;
+      if (settings.model) headers["X-Llm-Model"] = settings.model;
+
       const resp = await fetch("/api/llm", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ messages }),
       });
+      const tokensHeader = resp.headers.get("X-Token-Usage-Total");
+      if (tokensHeader) {
+        currentRunTokens += parseInt(tokensHeader, 10) || 0;
+      }
       const body = await resp.json();
       if (!resp.ok) {
         throw new Error(`invokeLlm failed (${resp.status}): ${body?.reason ?? "unknown error"}`);
@@ -129,13 +141,13 @@ export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProp
     setStage(null);
     setAttempt(0);
     setOutcome(null);
+    currentRunTokens = 0;
     onOutcomeChange?.(null);
     try {
       const start = Date.now();
       const result = await runAgentLoop(goal, tools, onStep);
       const latency = Date.now() - start;
-      const tokensUsed = 3000 * (attempt > 0 ? attempt : 1); 
-      const cost = tokensUsed * (0.000005); // rough estimate
+      const cost = currentRunTokens * 0.0000005; // $0.50 per 1M tokens
       window.dispatchEvent(new CustomEvent("bit:telemetry", { detail: { latency, cost } }));
 
       setOutcome(result);

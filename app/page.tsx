@@ -1,12 +1,15 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import ControlPanel from "@/components/ControlPanel";
 import AgentWorkspace from "@/components/AgentWorkspace";
 import AuditLedger from "@/components/AuditLedger";
+import SettingsModal from "@/components/SettingsModal";
 
 import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from "react-resizable-panels";
 
 export default function HomePage() {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   return (
     <main className="h-screen w-screen bg-bitBg flex flex-col overflow-hidden text-slate-100">
       {/* Navbar / Header Bar */}
@@ -24,11 +27,20 @@ export default function HomePage() {
           <span className="px-2 py-0.5 bg-slate-900 border border-slate-800 rounded font-mono text-slate-500">
             SEC_GATEWAY: ACTIVE
           </span>
-          <span className="px-2 py-0.5 bg-blue-950/40 border border-blue-900/30 rounded font-mono text-blue-400">
+          <span className="px-2 py-0.5 bg-blue-950/40 border border-blue-900/30 rounded font-mono text-blue-400 mr-2">
             PROXY_FILTER: ON
           </span>
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="p-1.5 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded transition-colors"
+            title="Settings"
+          >
+            ⚙️
+          </button>
         </div>
       </header>
+      
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
       {/* Main 3-Column Dashboard Area (Resizable) */}
       <div className="flex-1 p-4 min-h-0">

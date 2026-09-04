@@ -13,7 +13,12 @@ function parseRetryAfterMs(message: string): number {
 }
 
 export async function POST(request: Request) {
-  const GROQ_API_KEY = process.env.GROQ_API_KEY;
+  const customApiKey = request.headers.get("x-groq-api-key");
+  const customModel = request.headers.get("x-llm-model");
+
+  const GROQ_API_KEY = customApiKey || process.env.GROQ_API_KEY;
+  const MODEL = customModel || "openai/gpt-oss-120b";
+
   if (!GROQ_API_KEY) {
     return NextResponse.json({ reason: "Missing GROQ_API_KEY" }, { status: 401 });
   }
@@ -54,7 +59,7 @@ export async function POST(request: Request) {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const completion = await client.chat.completions.create({
-        model: "openai/gpt-oss-120b",
+        model: MODEL,
         messages: fullMessages,
         response_format: { type: "json_object" } as any,
       });
@@ -66,7 +71,12 @@ export async function POST(request: Request) {
 
       const parsed = JSON.parse(rawContent);
       const validated = StepSchema.parse(parsed);
-      return NextResponse.json(validated, { status: 200 });
+
+      const headers = new Headers();
+      if (completion.usage?.total_tokens) {
+        headers.set("X-Token-Usage-Total", completion.usage.total_tokens.toString());
+      }
+      return NextResponse.json(validated, { status: 200, headers });
 
     } catch (err: any) {
       lastErr = err;

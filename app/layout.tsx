@@ -1,6 +1,7 @@
 import "./globals.css";
 
 import { AuditProvider } from "@/contexts/AuditContext";
+import { SettingsProvider } from "@/contexts/SettingsContext";
 
 export const metadata = {
   title: "Project B.I.T. — Bounded Intent Tokens",
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full bg-bitBg text-slate-100">
       <body className="h-full antialiased selection:bg-bitPrimary selection:text-white">
-        <AuditProvider>{children}</AuditProvider>
+        <SettingsProvider>
+          <AuditProvider>{children}</AuditProvider>
+        </SettingsProvider>
       </body>
     </html>
   );
