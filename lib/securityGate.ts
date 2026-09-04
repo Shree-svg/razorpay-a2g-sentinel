@@ -31,6 +31,7 @@ export interface TransactionResult {
   status: TransactionStatus;
   reason: string;
   code?: TransactionFailureCode;
+  orderId?: string;
 }
 
 /** rules.md §1.3 — Hard Expiration (TTL): 180,000 ms (3 minutes). */

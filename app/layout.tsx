@@ -14,8 +14,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full bg-bitBg text-slate-100">
-      <body className="h-full antialiased selection:bg-bitPrimary selection:text-white">
+    <html lang="en" className="h-full bg-rzp-bg text-rzp-text font-sans">
+      <body className="h-full antialiased selection:bg-rzp-blue selection:text-white">
         <SettingsProvider>
           <AuditProvider>{children}</AuditProvider>
         </SettingsProvider>

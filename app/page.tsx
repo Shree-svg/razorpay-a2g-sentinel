@@ -11,28 +11,28 @@ export default function HomePage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
-    <main className="h-screen w-screen bg-bitBg flex flex-col overflow-hidden text-slate-100">
+    <main className="h-screen w-screen bg-rzp-bg flex flex-col overflow-hidden text-rzp-text">
       {/* Navbar / Header Bar */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-[#0b0f19] shrink-0">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-rzp-navy bg-rzp-navy shrink-0">
         <div className="flex items-center space-x-3">
-          <div className="w-2.5 h-2.5 bg-bitPrimary rounded-full animate-pulse" />
-          <h1 className="text-base font-bold tracking-tight text-white">
+          <div className="w-2.5 h-2.5 bg-rzp-blue rounded-full animate-pulse shadow-[0_0_8px_rgba(51,149,255,0.8)]" />
+          <h1 className="text-base font-semibold tracking-tight text-white">
             PROJECT B.I.T.
-            <span className="text-xs font-mono text-slate-500 ml-2 font-normal">
+            <span className="text-xs font-mono text-blue-200 ml-2 font-normal">
               Bounded Intent Tokens
             </span>
           </h1>
         </div>
-        <div className="flex items-center space-x-2 text-xs text-slate-400">
-          <span className="px-2 py-0.5 bg-slate-900 border border-slate-800 rounded font-mono text-slate-500">
+        <div className="flex items-center space-x-2 text-xs text-white">
+          <span className="px-2 py-0.5 bg-white/10 border border-white/20 rounded font-mono text-white/90">
             SEC_GATEWAY: ACTIVE
           </span>
-          <span className="px-2 py-0.5 bg-blue-950/40 border border-blue-900/30 rounded font-mono text-blue-400 mr-2">
+          <span className="px-2 py-0.5 bg-rzp-blue/20 border border-rzp-blue/50 rounded font-mono text-blue-200 mr-2">
             PROXY_FILTER: ON
           </span>
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="p-1.5 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 border border-slate-800 rounded transition-colors"
+            className="p-1.5 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-colors"
             title="Settings"
           >
             ⚙️
@@ -52,7 +52,7 @@ export default function HomePage() {
             </section>
           </Panel>
 
-          <PanelResizeHandle className="w-1.5 hover:bg-slate-700/50 active:bg-bitPrimary/50 transition-colors cursor-col-resize rounded-full mx-1" />
+          <PanelResizeHandle className="w-1.5 hover:bg-gray-200 active:bg-rzp-blue transition-colors cursor-col-resize rounded-full mx-1" />
 
           {/* Center Column: Dual Agent Workspace (45%) */}
           <Panel defaultSize={45} minSize={30}>
@@ -61,7 +61,7 @@ export default function HomePage() {
             </section>
           </Panel>
 
-          <PanelResizeHandle className="w-1.5 hover:bg-slate-700/50 active:bg-bitPrimary/50 transition-colors cursor-col-resize rounded-full mx-1" />
+          <PanelResizeHandle className="w-1.5 hover:bg-gray-200 active:bg-rzp-blue transition-colors cursor-col-resize rounded-full mx-1" />
 
           {/* Right Column: Live Audit & Verification Ledger (30%) */}
           <Panel defaultSize={30} minSize={20}>

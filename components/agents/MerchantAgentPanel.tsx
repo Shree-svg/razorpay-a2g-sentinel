@@ -87,11 +87,11 @@ export default function MerchantAgentPanel() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between pb-2 border-b border-purple-900/10 mb-2 shrink-0">
-        <span className="text-xs font-semibold text-purple-400 uppercase tracking-wide">
+      <div className="flex items-center justify-between pb-2 border-b border-gray-200 mb-2 shrink-0">
+        <span className="text-xs font-semibold text-rzp-navy uppercase tracking-wide">
           Merchant Agent
         </span>
-        <span className="text-[10px] bg-purple-950/80 border border-purple-900/40 text-purple-300 font-mono px-1.5 py-0.5 rounded">
+        <span className="text-[10px] bg-gray-100 border border-gray-200 text-gray-600 font-mono px-1.5 py-0.5 rounded">
           CATALOG PROXY
         </span>
       </div>
@@ -100,8 +100,8 @@ export default function MerchantAgentPanel() {
         {/* Loading */}
         {loading && (
           <div className="flex items-center justify-center py-8 space-x-2">
-            <span className="w-2 h-2 rounded-full bg-purple-500 animate-ping" />
-            <span className="text-purple-300 font-mono text-[11px]">
+            <span className="w-2 h-2 rounded-full bg-rzp-blue animate-ping" />
+            <span className="text-gray-500 font-mono text-[11px]">
               Fetching sanitized catalog…
             </span>
           </div>
@@ -109,12 +109,12 @@ export default function MerchantAgentPanel() {
 
         {/* Error */}
         {!loading && error && (
-          <div className="bg-red-950/20 border border-red-900/30 p-3 rounded-lg">
-            <p className="font-mono text-[10px] text-red-400 mb-1">FETCH_FAILED</p>
-            <p className="text-slate-400">{error}</p>
+          <div className="bg-red-50 border border-red-200 p-3 rounded-lg">
+            <p className="font-mono text-[10px] text-rzp-error font-bold mb-1">FETCH_FAILED</p>
+            <p className="text-gray-700">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="mt-2 text-[10px] font-mono text-red-300 underline underline-offset-2 hover:text-red-200"
+              className="mt-2 text-[10px] font-mono text-rzp-error underline underline-offset-2 hover:text-red-700"
             >
               Reload page to retry
             </button>
@@ -124,9 +124,9 @@ export default function MerchantAgentPanel() {
         {/* Catalog status + search */}
         {!loading && !error && (
           <>
-            <div className="bg-slate-900/70 border border-slate-850 p-2.5 rounded-lg text-slate-400">
-              <span className="text-purple-400 font-semibold">Catalog Status:</span>
-              <p className="mt-1 font-mono text-[11px] text-purple-300">
+            <div className="bg-white border border-gray-200 p-2.5 rounded-lg text-gray-700 shadow-sm">
+              <span className="text-rzp-navy font-semibold">Catalog Status:</span>
+              <p className="mt-1 font-mono text-[11px] text-gray-500">
                 Sanitized (Proxy On) · {catalog.length} SKUs
               </p>
             </div>
@@ -137,11 +137,11 @@ export default function MerchantAgentPanel() {
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(0); }}
               placeholder="Search by name, SKU, or keyword…"
-              className="w-full bg-slate-900/60 border border-slate-700/50 rounded px-2.5 py-1.5 text-[11px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-purple-700/60"
+              className="w-full bg-white border border-gray-300 rounded-lg px-2.5 py-1.5 text-[11px] text-gray-800 placeholder-gray-400 focus:outline-none focus:border-rzp-blue focus:ring-1 focus:ring-rzp-blue shadow-sm"
             />
 
             {/* Match count */}
-            <p className="text-[10px] text-slate-600 font-mono">
+            <p className="text-[10px] text-gray-400 font-mono">
               {search ? `${filtered.length} matches` : `Showing ${visible.length} of ${catalog.length}`}
               {totalPages > 1 && ` · page ${page + 1}/${totalPages}`}
             </p>
@@ -154,26 +154,26 @@ export default function MerchantAgentPanel() {
           visible.map((item) => (
             <div
               key={item.sku}
-              className="bg-purple-900/10 border border-purple-900/20 p-2.5 rounded-lg"
+              className="bg-white border border-gray-200 p-2.5 rounded-lg shadow-sm"
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="font-semibold text-slate-200 truncate mr-2">
+                <span className="font-semibold text-gray-800 truncate mr-2">
                   {item.name}
                 </span>
-                <span className="text-[10px] font-mono text-purple-400 bg-purple-950/60 px-1.5 py-0.5 rounded shrink-0">
+                <span className="text-[10px] font-mono text-rzp-blue bg-blue-50 px-1.5 py-0.5 rounded shrink-0 font-medium">
                   {item.sku}
                 </span>
               </div>
-              <p className="text-slate-400 text-[11px] mb-1.5 line-clamp-2">
+              <p className="text-gray-500 text-[11px] mb-1.5 line-clamp-2">
                 {item.description}
               </p>
               <div className="flex items-center justify-between">
-                <span className="font-mono text-emerald-400 text-[12px]">
+                <span className="font-mono text-rzp-success font-semibold text-[12px]">
                   {formatPrice(item.price_inr)}
                 </span>
                 <span
                   className={`font-mono text-[10px] ${
-                    item.stock_available > 0 ? "text-slate-500" : "text-red-400"
+                    item.stock_available > 0 ? "text-gray-500" : "text-rzp-error"
                   }`}
                 >
                   {item.stock_available > 0
@@ -190,14 +190,14 @@ export default function MerchantAgentPanel() {
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="flex-1 py-1 text-[10px] font-mono bg-slate-800/60 hover:bg-slate-700 border border-slate-700/50 rounded text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed transition"
+              className="flex-1 py-1 text-[10px] font-mono bg-white hover:bg-gray-50 border border-gray-200 rounded-lg text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm"
             >
               ← Prev
             </button>
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page >= totalPages - 1}
-              className="flex-1 py-1 text-[10px] font-mono bg-slate-800/60 hover:bg-slate-700 border border-slate-700/50 rounded text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed transition"
+              className="flex-1 py-1 text-[10px] font-mono bg-white hover:bg-gray-50 border border-gray-200 rounded-lg text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-sm"
             >
               Next →
             </button>

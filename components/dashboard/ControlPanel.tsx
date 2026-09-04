@@ -78,25 +78,25 @@ export default function ControlPanel() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#0f172a]/40 border border-slate-800 rounded-lg p-4 space-y-6">
+    <div className="flex flex-col h-full bg-white border border-gray-200 rounded-lg p-4 space-y-6 shadow-sm">
       {/* Header */}
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-rzp-navy">
           Control &amp; Red Team Suite
         </h2>
-        <p className="text-xs text-slate-500 mt-1">
+        <p className="text-xs text-gray-500 mt-1">
           Demo scenarios, attack vectors, and real-time loop telemetry.
         </p>
       </div>
 
       {/* Catalog Preset Selector — now functional */}
-      <div className="border border-slate-800 bg-slate-900/50 rounded-lg p-4 space-y-3">
+      <div className="border border-gray-200 bg-gray-50 rounded-lg p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
+          <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
             Select Catalog Preset
           </h3>
           {presetStatus && (
-            <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/40 px-1.5 py-0.5 rounded border border-emerald-900/30">
+            <span className="text-[10px] font-mono text-rzp-success bg-green-50 px-1.5 py-0.5 rounded border border-green-200">
               {presetStatus}
             </span>
           )}
@@ -108,10 +108,10 @@ export default function ControlPanel() {
               <button
                 key={key}
                 onClick={() => handlePreset(key)}
-                className={`py-2 px-3 text-xs border rounded text-center transition font-medium ${
+                className={`py-2 px-3 text-xs border rounded-lg text-center transition font-medium ${
                   isActive
-                    ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-900/30"
-                    : "bg-slate-800/80 hover:bg-slate-700 border-slate-700/50 text-slate-300 hover:text-white"
+                    ? "bg-rzp-blue border-rzp-blue text-white shadow-md"
+                    : "bg-white hover:bg-gray-100 border-gray-200 text-gray-700 hover:text-rzp-navy"
                 }`}
               >
                 {label}
@@ -120,21 +120,20 @@ export default function ControlPanel() {
           })}
         </div>
         {activePreset && (
-          <p className="text-[10px] text-slate-500 leading-relaxed">
-            <span className="text-blue-400">Goal pre-filled in Buyer Agent ↗</span> — hit{" "}
-            <span className="text-white font-mono">Run</span> to execute.
+          <p className="text-[10px] text-gray-500 leading-relaxed">
+            <span className="text-rzp-blue">Goal pre-filled in Buyer Agent ↗</span> — hit{" "}
+            <span className="text-gray-800 font-mono font-medium">Run</span> to execute.
           </p>
         )}
       </div>
 
       {/* Red Team Simulation Buttons */}
-      <div className="border border-amber-900/30 bg-amber-950/5 rounded-lg p-4 space-y-3 relative overflow-auto">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 via-yellow-500 to-amber-500 opacity-60" />
+      <div className="border-y border-r border-y-gray-200 border-r-gray-200 border-l-4 border-l-rzp-error bg-white rounded-lg p-4 space-y-3 relative overflow-auto shadow-sm">
 
         {process.env.NODE_ENV !== "production" && (
           <div className="flex flex-col gap-2 mt-2">
             <button
-              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded disabled:opacity-50"
+              className="w-full py-1.5 text-xs bg-white hover:bg-red-50 text-gray-700 hover:text-rzp-error border border-gray-200 hover:border-red-200 rounded-lg shadow-sm transition-colors disabled:opacity-50"
               disabled={!!runningSim}
               onClick={async () => {
                 setRunningSim("price_ceiling");
@@ -180,7 +179,7 @@ export default function ControlPanel() {
             </button>
 
             <button
-              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded disabled:opacity-50"
+              className="w-full py-1.5 text-xs bg-white hover:bg-red-50 text-gray-700 hover:text-rzp-error border border-gray-200 hover:border-red-200 rounded-lg shadow-sm transition-colors disabled:opacity-50"
               disabled={!!runningSim}
               onClick={async () => {
                 setRunningSim("malformed_llm");
@@ -207,7 +206,7 @@ export default function ControlPanel() {
             </button>
 
             <button
-              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded disabled:opacity-50"
+              className="w-full py-1.5 text-xs bg-white hover:bg-red-50 text-gray-700 hover:text-rzp-error border border-gray-200 hover:border-red-200 rounded-lg shadow-sm transition-colors disabled:opacity-50"
               disabled={!!runningSim}
               onClick={async () => {
                 setRunningSim("token_expiry");
@@ -253,7 +252,7 @@ export default function ControlPanel() {
             </button>
 
             <button
-              className="w-full py-1.5 text-xs bg-red-700 hover:bg-red-600 text-slate-100 rounded disabled:opacity-50"
+              className="w-full py-1.5 text-xs bg-white hover:bg-red-50 text-gray-700 hover:text-rzp-error border border-gray-200 hover:border-red-200 rounded-lg shadow-sm transition-colors disabled:opacity-50"
               disabled={!!runningSim}
               onClick={async () => {
                 setRunningSim("token_replay");
@@ -305,10 +304,10 @@ export default function ControlPanel() {
           </div>
         )}
 
-        <h3 className="text-xs font-semibold text-amber-500/90 uppercase tracking-wide mt-4">
+        <h3 className="text-xs font-semibold text-rzp-error uppercase tracking-wide mt-4">
           Red Team Simulation
         </h3>
-        <p className="text-[11px] text-slate-400 leading-normal mb-2">
+        <p className="text-[11px] text-gray-500 leading-normal mb-2">
           Simulate runtime attacks to verify sanitization and validation limits.
         </p>
         <div className="flex flex-col gap-2">
@@ -317,22 +316,22 @@ export default function ControlPanel() {
       </div>
 
       {/* Real-Time Telemetry Card */}
-      <div className="flex-1 border border-slate-850 bg-slate-900/30 rounded-lg p-4 space-y-3">
-        <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wide">
+      <div className="flex-1 border border-gray-200 bg-gray-50 rounded-lg p-4 space-y-3">
+        <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
           Real-Time Telemetry
         </h3>
         <div className="space-y-2 font-mono text-xs">
-          <div className="flex justify-between py-1.5 border-b border-slate-850/50">
-            <span className="text-slate-500">Loop Latency</span>
-            <span className="text-slate-400">{telemetry.latency}</span>
+          <div className="flex justify-between py-1.5 border-b border-gray-200">
+            <span className="text-gray-500">Loop Latency</span>
+            <span className="text-gray-800 font-medium">{telemetry.latency}</span>
           </div>
-          <div className="flex justify-between py-1.5 border-b border-slate-850/50">
-            <span className="text-slate-500">Token Cost</span>
-            <span className="text-slate-400">{telemetry.cost}</span>
+          <div className="flex justify-between py-1.5 border-b border-gray-200">
+            <span className="text-gray-500">Token Cost</span>
+            <span className="text-gray-800 font-medium">{telemetry.cost}</span>
           </div>
           <div className="flex justify-between py-1.5">
-            <span className="text-slate-500">Hash Verifier</span>
-            <span className="text-emerald-500 font-semibold uppercase tracking-wider">
+            <span className="text-gray-500">Hash Verifier</span>
+            <span className="text-rzp-success font-semibold uppercase tracking-wider">
               Ready
             </span>
           </div>
