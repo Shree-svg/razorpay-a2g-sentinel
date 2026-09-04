@@ -104,3 +104,45 @@ $ npm run build
 ## FINAL STEP — README Update
 - **What was attempted**: Updated `README.md` with a new `Integration Status & Metrics` section, documenting the real Razorpay integration, 100% block rate on basic attacks, and known limitations (Unicode homoglyphs & Base64 injections).
 - **Status**: PASS
+
+## TASK A & B — Unicode Homoglyph & Base64 Sanitization Fix
+- **What was attempted**: Updated `lib/sanitization.ts` to include a normalization map for Cyrillic/Greek lookalikes mapping to Latin characters before regex execution. Added a heuristic to detect long Base64 strings, decode them, check against injection patterns, and strip the original Base64 payload if a match is found. Verified it does not mangle normal text or flag false positives.
+- **Verification Command / Output**:
+```bash
+$ npx tsx scripts/test-normal.ts
+Testing 5 normal products for mangling or false positives:
+OK: Sony WH-1000XM5 Noise Cancelling
+OK: Apple AirPods Pro 2nd Gen
+OK: Bose QuietComfort 45
+OK: JBL Tune 760NC Wireless
+OK: Sennheiser Momentum 4 Wireless
+
+$ npx tsx scripts/test-sanitization.ts
+### Task 3: Injection Variants
+#### Injection via name field
+- **Caught**: Yes
+#### Unicode homoglyphs
+- **Caught**: Yes
+#### Injection split across fields
+- **Caught**: Yes
+#### Base64-encoded instructions
+- **Caught**: Yes
+
+$ npx tsx scripts/redteam-bench.ts
+┌─────────┬───────────────────────────────┬──────────┬─────────┬────────────────┬────────────┐
+│ (index) │ attack                        │ attempts │ blocked │ falseNegatives │ avgLatency │
+├─────────┼───────────────────────────────┼──────────┼─────────┼────────────────┼────────────┤
+│ 0       │ 'Price Ceiling Breach'        │ 50       │ 50      │ 0              │ 0.02       │
+│ 1       │ 'Malformed LLM'               │ 50       │ 50      │ 0              │ 0.06       │
+│ 2       │ 'Token Expiry'                │ 50       │ 50      │ 0              │ 1101.42    │
+│ 3       │ 'Token Replay'                │ 50       │ 50      │ 0              │ 0.06       │
+│ 4       │ 'Prompt Injection'            │ 50       │ 50      │ 0              │ 0.06       │
+│ 5       │ 'Unicode Homoglyph Injection' │ 50       │ 50      │ 0              │ 0.04       │
+│ 6       │ 'Base64 Injection'            │ 50       │ 50      │ 0              │ 0.04       │
+└─────────┴───────────────────────────────┴──────────┴─────────┴────────────────┴────────────┘
+
+$ npm run build
+...
+ ✓ Compiled successfully
+```
+- **Status**: PASS (All previously passing functionality preserved, and both vulnerabilities correctly caught with 0 false positives).
