@@ -131,7 +131,13 @@ export default function BuyerAgentPanel({ onOutcomeChange }: BuyerAgentPanelProp
     setOutcome(null);
     onOutcomeChange?.(null);
     try {
+      const start = Date.now();
       const result = await runAgentLoop(goal, tools, onStep);
+      const latency = Date.now() - start;
+      const tokensUsed = 3000 * (attempt > 0 ? attempt : 1); 
+      const cost = tokensUsed * (0.000005); // rough estimate
+      window.dispatchEvent(new CustomEvent("bit:telemetry", { detail: { latency, cost } }));
+
       setOutcome(result);
       onOutcomeChange?.(result);
     } catch (e: any) {

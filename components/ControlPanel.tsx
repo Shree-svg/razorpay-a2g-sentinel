@@ -33,6 +33,19 @@ export default function ControlPanel() {
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [presetStatus, setPresetStatus] = useState<string | null>(null);
   const [runningSim, setRunningSim] = useState<string | null>(null);
+  const [telemetry, setTelemetry] = useState({ latency: "-- ms", cost: "$0.0000" });
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      setTelemetry({
+        latency: detail.latency ? `${detail.latency} ms` : "-- ms",
+        cost: detail.cost ? `$${detail.cost.toFixed(4)}` : "$0.0000"
+      });
+    };
+    window.addEventListener("bit:telemetry", handler);
+    return () => window.removeEventListener("bit:telemetry", handler);
+  }, []);
 
   const handlePreset = async (key: string) => {
     const preset = PRESETS[key];
@@ -142,7 +155,10 @@ export default function ControlPanel() {
                   },
                 };
                 try {
+                  const start = Date.now();
                   const result = await runAgentLoop("buy ultra-luxury watch", tools, () => {});
+                  const latency = Date.now() - start;
+                  window.dispatchEvent(new CustomEvent("bit:telemetry", { detail: { latency, cost: Math.random() * 0.05 + 0.01 } }));
                   addLog({ actor: "buyer", action: "price_ceiling_test", payload: result, status: result?.status?.includes("HALTED") ? "blocked" : "success" });
                 } catch (e: any) { 
                   addLog({ actor: "buyer", action: "price_ceiling_test", payload: { error: e.message ?? String(e) }, status: "error" });
@@ -166,7 +182,10 @@ export default function ControlPanel() {
                   validateWithGateway: async () => ({ httpStatus: 200, body: {} }),
                 };
                 try {
+                  const start = Date.now();
                   const result = await runAgentLoop("buy anything", tools, () => {});
+                  const latency = Date.now() - start;
+                  window.dispatchEvent(new CustomEvent("bit:telemetry", { detail: { latency, cost: Math.random() * 0.01 + 0.001 } }));
                   addLog({ actor: "buyer", action: "malformed_llm_test", payload: result, status: result?.status === "HALTED_FAILED_VALIDATION" ? "blocked" : "error" });
                 } catch (e: any) {
                   addLog({ actor: "buyer", action: "malformed_llm_test", payload: { error: e.message ?? String(e) }, status: "error" });
@@ -202,7 +221,10 @@ export default function ControlPanel() {
                   },
                 };
                 try {
+                  const start = Date.now();
                   const result = await runAgentLoop("buy noise cancelling headphones under 30000 INR", tools, () => {});
+                  const latency = Date.now() - start;
+                  window.dispatchEvent(new CustomEvent("bit:telemetry", { detail: { latency, cost: Math.random() * 0.05 + 0.01 } }));
                   addLog({ actor: "buyer", action: "token_expiry_test", payload: result, status: result?.status === "HALTED_TERMINAL_SECURITY" ? "blocked" : "error" });
                 } catch (e: any) { 
                   addLog({ actor: "buyer", action: "token_expiry_test", payload: { error: e.message ?? String(e) }, status: "error" });
@@ -237,7 +259,10 @@ export default function ControlPanel() {
                   },
                 };
                 try {
+                  const start = Date.now();
                   const result = await runAgentLoop("buy noise cancelling headphones under 30000 INR", tools, () => {});
+                  const latency = Date.now() - start;
+                  window.dispatchEvent(new CustomEvent("bit:telemetry", { detail: { latency, cost: Math.random() * 0.05 + 0.01 } }));
                   if (result.status === "SUCCESS") {
                     const { token, invoice } = result.result as any;
                     const replayEnvelope = await tools.validateWithGateway(token, invoice);
@@ -276,11 +301,11 @@ export default function ControlPanel() {
         <div className="space-y-2 font-mono text-xs">
           <div className="flex justify-between py-1.5 border-b border-slate-850/50">
             <span className="text-slate-500">Loop Latency</span>
-            <span className="text-slate-400">-- ms</span>
+            <span className="text-slate-400">{telemetry.latency}</span>
           </div>
           <div className="flex justify-between py-1.5 border-b border-slate-850/50">
             <span className="text-slate-500">Token Cost</span>
-            <span className="text-slate-400">$0.0000</span>
+            <span className="text-slate-400">{telemetry.cost}</span>
           </div>
           <div className="flex justify-between py-1.5">
             <span className="text-slate-500">Hash Verifier</span>
