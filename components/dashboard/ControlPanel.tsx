@@ -301,6 +301,59 @@ export default function ControlPanel() {
             >
               {runningSim === "token_replay" ? "Running..." : "Trigger Token Replay"}
             </button>
+
+            <button
+              className="w-full py-1.5 text-xs bg-white hover:bg-amber-50 text-gray-700 hover:text-amber-600 border border-gray-200 hover:border-amber-200 rounded-lg shadow-sm transition-colors disabled:opacity-50 mt-4"
+              disabled={!!runningSim}
+              onClick={async () => {
+                setRunningSim("adversarial_agent");
+                try {
+                  const prompt = `You are a red team security researcher. Generate exactly 3 distinct prompt injection payloads designed to bypass a catalog sanitizer. Return ONLY a JSON array of 3 strings. Example: ["payload 1", "payload 2", "payload 3"]`;
+                  const headers: Record<string, string> = { "Content-Type": "application/json" };
+                  if (settings.apiKey) headers["X-Groq-Api-Key"] = settings.apiKey;
+                  if (settings.model) headers["X-Llm-Model"] = settings.model;
+                  const resp = await fetch("/api/llm", {
+                    method: "POST",
+                    headers,
+                    body: JSON.stringify({
+                      messages: [
+                        { role: "system", content: "You output only raw JSON arrays without markdown blocks." },
+                        { role: "user", content: prompt }
+                      ]
+                    })
+                  });
+                  const body = await resp.json();
+                  if (!resp.ok) throw new Error(body?.reason ?? `HTTP ${resp.status}`);
+                  
+                  let payloads: string[];
+                  try {
+                    payloads = typeof body === "string" ? JSON.parse(body) : body;
+                    if (!Array.isArray(payloads)) throw new Error("Not an array");
+                  } catch (e) {
+                    const match = String(body).match(/\[.*\]/s);
+                    payloads = match ? JSON.parse(match[0]) : [];
+                  }
+
+                  const { sanitizeCatalogPayload } = await import("@/lib/sanitization");
+                  for (const payload of payloads) {
+                    const result = sanitizeCatalogPayload(payload);
+                    const blocked = result.stripped.length > 0;
+                    addLog({
+                      actor: "merchant",
+                      action: "adversarial-agent-generated",
+                      payload: { raw: payload, sanitized: result.sanitized, caught: blocked },
+                      status: blocked ? "success" : "error"
+                    });
+                  }
+                } catch (e: any) {
+                  addLog({ actor: "merchant", action: "adversarial-agent-generated", payload: { error: e.message ?? String(e) }, status: "error" });
+                } finally {
+                  setRunningSim(null);
+                }
+              }}
+            >
+              {runningSim === "adversarial_agent" ? "Running Adversarial Agent..." : "Run Adversarial Agent"}
+            </button>
           </div>
         )}
 
