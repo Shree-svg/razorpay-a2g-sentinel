@@ -100,3 +100,7 @@ $ npm run build
 - **What was attempted**: Rewrote `docs/presentation/DEMO_SCRIPT.md` to compress the presentation to a 2-minute flow that prioritizes showing system rejections (Prompt Injection, Token Replay) before showcasing the happy path (Approval).
 - **Verification Command / Output**: Read new DEMO_SCRIPT.md
 - **Status**: PASS
+
+## FINAL STEP — README Update
+- **What was attempted**: Updated `README.md` with a new `Integration Status & Metrics` section, documenting the real Razorpay integration, 100% block rate on basic attacks, and known limitations (Unicode homoglyphs & Base64 injections).
+- **Status**: PASS

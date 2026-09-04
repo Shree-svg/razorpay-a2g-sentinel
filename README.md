@@ -199,6 +199,24 @@ Returns all catalog items with prompt injections stripped. Raw catalog is **neve
 
 ---
 
+## Integration Status & Metrics
+
+**Integration Status:**
+- Razorpay Orders API (test mode) successfully integrated. Validated tokens mint real Razorpay test orders.
+
+**Red Team Benchmark Results (N=50 per attack):**
+- **Price Ceiling Breach:** 100% Blocked (0.02ms avg)
+- **Token Expiry / Replay:** 100% Blocked
+- **Malformed LLM:** 100% Blocked
+- **Basic Prompt Injection:** 100% Blocked
+
+**Known Limitations:**
+The regex-based sanitization proxy successfully blocks basic attacks, but sophisticated variants bypass it:
+1. **Unicode Homoglyphs** (e.g., Cyrillic characters resembling English) bypass the regex.
+2. **Base64-Encoded Instructions** are ignored by the sanitizer but can still be decoded by an LLM at runtime.
+
+---
+
 ## Security Rules (Summary)
 
 See [`docs/rules.md`](docs/rules.md) for the full specification.
