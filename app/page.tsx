@@ -4,7 +4,7 @@ import ControlPanel from "@/components/ControlPanel";
 import AgentWorkspace from "@/components/AgentWorkspace";
 import AuditLedger from "@/components/AuditLedger";
 
-import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
+import { Group as PanelGroup, Panel, Separator as PanelResizeHandle } from "react-resizable-panels";
 
 export default function HomePage() {
   return (
